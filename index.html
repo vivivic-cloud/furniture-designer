@@ -143,7 +143,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v1.7.0</span>
+    <span class="version-badge">v1.8.0</span>
   </div>
 
   <div class="main">
@@ -701,13 +701,21 @@ function draw() {
   const Tpx=S.T*sc;
   const colW=fw/S.vCols;
 
-  // ── 상판 / 하판 (두께 사각형) ──────────────────────
+  // ── 측판 좌/우 (전체 높이 통판) ─────────────────────
+  ctx.fillStyle='#c8c8c8';
+  ctx.fillRect(ox,        oy, Tpx, fh);   // 좌 측판
+  ctx.fillRect(ox+fw-Tpx, oy, Tpx, fh);  // 우 측판
+  ctx.strokeStyle='#444'; ctx.lineWidth=1;
+  ctx.strokeRect(ox,        oy, Tpx, fh);
+  ctx.strokeRect(ox+fw-Tpx, oy, Tpx, fh);
+
+  // ── 상판 / 하판 (측판 사이에 끼움) ──────────────────
   ctx.fillStyle='#d8d8d8';
-  ctx.fillRect(ox, oy, fw, Tpx);
-  ctx.fillRect(ox, oy+fh-Tpx, fw, Tpx);
+  ctx.fillRect(ox+Tpx, oy,        fw-2*Tpx, Tpx);
+  ctx.fillRect(ox+Tpx, oy+fh-Tpx, fw-2*Tpx, Tpx);
   ctx.strokeStyle='#555'; ctx.lineWidth=1;
-  ctx.strokeRect(ox, oy, fw, Tpx);
-  ctx.strokeRect(ox, oy+fh-Tpx, fw, Tpx);
+  ctx.strokeRect(ox+Tpx, oy,        fw-2*Tpx, Tpx);
+  ctx.strokeRect(ox+Tpx, oy+fh-Tpx, fw-2*Tpx, Tpx);
 
   // ── 수직 칸막이 (두께 사각형) ──────────────────────
   for(let i=1;i<S.vCols;i++){
@@ -743,15 +751,26 @@ function draw() {
   // ── 외곽 윤곽선 (맨 위에 덮어 그림) ─────────────────
   ctx.strokeStyle='#111'; ctx.lineWidth=2.5; ctx.strokeRect(ox,oy,fw,fh);
 
-  // ── 두께 치수 표기 (좌측) ────────────────────────
+  // ── 두께 치수 표기 ────────────────────────────────
   if(Tpx>6){
-    const font=`${Math.max(8,Math.round(sc*8))}px 'Malgun Gothic',sans-serif`;
-    ctx.font=font; ctx.fillStyle='#888'; ctx.textAlign='right';
-    ctx.fillText(`${S.T}`,ox-3, oy+Tpx/2+4);
-    ctx.fillText(`${S.T}`,ox-3, oy+fh-Tpx/2+4);
-    ctx.strokeStyle='#ccc'; ctx.lineWidth=0.8;
-    L(ctx,ox-8,oy,ox-8,oy+Tpx);
-    L(ctx,ox-8,oy+fh-Tpx,ox-8,oy+fh);
+    const fnt=`${Math.max(8,Math.round(sc*8))}px 'Malgun Gothic',sans-serif`;
+    ctx.font=fnt; ctx.fillStyle='#777'; ctx.textAlign='center';
+    // 상판 T 표기
+    ctx.fillText(`T${S.T}`, ox+Tpx+(fw-2*Tpx)/2, oy+Tpx/2+4);
+    // 하판 T 표기
+    ctx.fillText(`T${S.T}`, ox+Tpx+(fw-2*Tpx)/2, oy+fh-Tpx/2+4);
+    // 좌 측판 T 표기 (세로)
+    ctx.save();
+    ctx.translate(ox+Tpx/2, oy+fh/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(`T${S.T}`, 0, 4);
+    ctx.restore();
+    // 우 측판 T 표기 (세로)
+    ctx.save();
+    ctx.translate(ox+fw-Tpx/2, oy+fh/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(`T${S.T}`, 0, 4);
+    ctx.restore();
   }
 
   // Doors
