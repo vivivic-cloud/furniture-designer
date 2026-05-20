@@ -216,7 +216,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.4.1</span>
+    <span class="version-badge">v2.5.0</span>
   </div>
 
   <div class="main">
@@ -493,9 +493,14 @@ function ensureCols() {
     S.vDivPos=Array.from({length:nDiv},(_,i)=>(i+1)/S.vCols);
   if(!S.vDivTypes||S.vDivTypes.length!==nDiv)
     S.vDivTypes=Array.from({length:nDiv},()=>'fixed');
-  // 각 칸 선반 타입 초기화
-  for(let ci=0;ci<S.vCols;ci++)
-    if(!S.cols[ci].shelfType) S.cols[ci].shelfType='fixed';
+  // 각 칸 선반 타입 배열 초기화 (선반별 개별 고정/이동형)
+  for(let ci=0;ci<S.vCols;ci++){
+    const c=S.cols[ci];
+    const n=(c.type==='shelf'||c.type==='mixed')?(c.shelves||0):0;
+    const def=c.shelfType||'fixed'; // 기존 단일 타입 호환
+    if(!c.shelfTypes||c.shelfTypes.length!==n)
+      c.shelfTypes=Array.from({length:n},()=>def);
+  }
 }
 function setVCols(n) { S.vCols=n; S.vDivPos=[]; S.vDivTypes=[]; ensureCols(); render(); }
 function setColType(i,t) {
@@ -504,13 +509,25 @@ function setColType(i,t) {
   if(t==='mixed'){S.cols[i].shelves=S.cols[i].shelves||2;S.cols[i].drawers=S.cols[i].drawers||2;}
   const n=(t==='shelf'||t==='mixed')?(S.cols[i].shelves||0):0;
   S.cols[i].shelfPos=Array.from({length:n},(_,j)=>(j+1)/(n+1));
+  S.cols[i].shelfTypes=Array.from({length:n},()=>'fixed');
   renderColConfigs(); draw();
   if(document.getElementById('paneParts').classList.contains('active')) renderParts();
 }
 function setColShelves(i,v){
-  const n=parseInt(v)||0; S.cols[i].shelves=n;
+  const n=parseInt(v)||0;
+  const prev=S.cols[i].shelfTypes||[];
+  S.cols[i].shelves=n;
   S.cols[i].shelfPos=Array.from({length:n},(_,j)=>(j+1)/(n+1));
-  draw(); if(document.getElementById('paneParts').classList.contains('active'))renderParts();
+  // 기존 타입 유지, 새 선반은 기본 고정형
+  S.cols[i].shelfTypes=Array.from({length:n},(_,j)=>prev[j]||'fixed');
+  renderColConfigs(); draw();
+  if(document.getElementById('paneParts').classList.contains('active'))renderParts();
+}
+function toggleShelfType(ci,si){
+  const c=S.cols[ci];
+  if(!c.shelfTypes||si>=c.shelfTypes.length) return;
+  c.shelfTypes[si]=c.shelfTypes[si]==='fixed'?'adj':'fixed';
+  renderColConfigs(); draw();
 }
 function setColDrawers(i,v){S.cols[i].drawers=parseInt(v)||1; draw(); if(document.getElementById('paneParts').classList.contains('active'))renderParts();}
 
@@ -688,7 +705,10 @@ function renderColConfigs() {
   el.innerHTML=S.cols.map((c,i)=>{
     const hs=c.type==='shelf'||c.type==='mixed';
     const hd=c.type==='drawer'||c.type==='mixed';
-    const st=c.shelfType||'fixed';
+    const types=c.shelfTypes||[];
+    // 전체 일괄 설정 버튼용
+    const allFixed=types.every(t=>t==='fixed');
+    const allAdj=types.every(t=>t==='adj');
     return `<div class="col-card">
       <div class="col-card-title">${LBL[i]}칸</div>
       <div class="ctype-row">
@@ -701,13 +721,27 @@ function renderColConfigs() {
         ${hs?`<label>선반 수:<input type="number" value="${c.shelves}" min="0" max="15" oninput="setColShelves(${i},this.value)"></label>`:''}
         ${hd?`<label>서랍 수:<input type="number" value="${c.drawers||2}" min="1" max="12" oninput="setColDrawers(${i},this.value)"></label>`:''}
       </div>`:''}
-      ${hs?`<div class="fxadj-row">
-        <span class="fxadj-lbl">선반 형태:</span>
-        <button class="fxadj-btn ${st==='fixed'?'sel':''}"
-          onclick="S.cols[${i}].shelfType='fixed';renderColConfigs();draw()">고정형</button>
-        <button class="fxadj-btn ${st==='adj'?'adj-sel':''}"
-          onclick="S.cols[${i}].shelfType='adj';renderColConfigs();draw()">이동형 ●●●</button>
-      </div>`:''}
+      ${hs&&types.length>0?`
+        <div style="margin-top:8px">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
+            <span class="fxadj-lbl">선반 형태:</span>
+            <button class="fxadj-btn ${allFixed?'sel':''}" style="font-size:10px;padding:2px 7px"
+              onclick="S.cols[${i}].shelfTypes=S.cols[${i}].shelfTypes.map(()=>'fixed');renderColConfigs();draw()">전체 고정</button>
+            <button class="fxadj-btn ${allAdj?'adj-sel':''}" style="font-size:10px;padding:2px 7px"
+              onclick="S.cols[${i}].shelfTypes=S.cols[${i}].shelfTypes.map(()=>'adj');renderColConfigs();draw()">전체 이동</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            ${types.map((t,j)=>`
+              <button onclick="toggleShelfType(${i},${j})"
+                style="padding:3px 8px;border-radius:12px;border:1.5px solid ${t==='adj'?'#0ea5e9':'#4361ee'};
+                       background:${t==='adj'?'#e0f2fe':'#eef0ff'};color:${t==='adj'?'#0369a1':'#4361ee'};
+                       font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+                       transition:all .12s"
+                title="클릭하면 ${t==='fixed'?'이동형':'고정형'}으로 변경">
+                ${j+1}&nbsp;${t==='fixed'?'고정':'이동'}
+              </button>`).join('')}
+          </div>
+        </div>`:''}
     </div>`;
   }).join('')
   // 수직 칸막이 타입 (칸 수 > 1)
@@ -951,7 +985,10 @@ function calcParts() {
     const cW  = colInnerW;
     const cH  = r(innerH);
 
-    const stNote = (c.shelfType||'fixed')==='adj' ? '  [이동형-선반핀]' : '  [고정형]';
+    const _stypes=c.shelfTypes||[];
+    const _nAdj=_stypes.filter(t=>t==='adj').length;
+    const _nFixed=_stypes.length-_nAdj;
+    const stNote=_stypes.length===0?'':_nAdj===0?'  [전체 고정형]':_nFixed===0?'  [전체 이동형-선반핀]':`  [고정형×${_nFixed} / 이동형×${_nAdj}]`;
     if (c.type === 'shelf') {
       const n = c.shelves||0;
       if (n>0)
@@ -989,7 +1026,7 @@ function calcParts() {
       if (ns>0)
         parts.push({ g:'shelf', name:`선반${lbl}`, qty:ns,
           w: cW, h: innerD, t: T,
-          note:`상단 ${topH}mm 영역  유효깊이(${innerDNote})${stNote}` });
+          note:`상단 ${topH}mm 영역  유효깊이(${innerDNote})${stNote||''}` });
       // 서랍 박스
       const nd   = Math.max(1, c.drawers||2);
       const dFH2 = r(botH/nd - 4);
@@ -1212,10 +1249,10 @@ function draw() {
     const iW=cx2-cx1;
     const selShelfIdx=(_sel&&_sel.type==='shelf'&&_sel.ci===ci)?_sel.idx:-1;
 
-    const st=c.shelfType||'fixed';
+    const shelfTypes=c.shelfTypes||[];
     if(c.type==='shelf'||c.type==='open'){
       const positions=c.type==='open'?[]:(c.shelfPos||[]);
-      drawShelves(ctx,cx1,cy1,iW,iH,positions,Tpx,sc,selShelfIdx,st);
+      drawShelves(ctx,cx1,cy1,iW,iH,positions,Tpx,sc,selShelfIdx,shelfTypes);
       drawSpaceDims(ctx,cx1,cy1,iW,iH,positions,Tpx,sc);
     } else if(c.type==='drawer'){
       drawDrawers(ctx,cx1,cy1,iW,iH,Math.max(1,c.drawers||2),sc);
@@ -1227,7 +1264,7 @@ function draw() {
       ctx.strokeRect(cx1,splitY,iW,Tpx);
       const topH=splitY-cy1;
       const positions=c.shelfPos||[];
-      drawShelves(ctx,cx1,cy1,iW,topH,positions,Tpx,sc,selShelfIdx,st);
+      drawShelves(ctx,cx1,cy1,iW,topH,positions,Tpx,sc,selShelfIdx,shelfTypes);
       drawSpaceDims(ctx,cx1,cy1,iW,topH,positions,Tpx,sc);
       drawDrawers(ctx,cx1,splitY+Tpx,iW,cy2-(splitY+Tpx),Math.max(1,c.drawers||2),sc);
     }
@@ -1334,10 +1371,11 @@ function draw() {
 }
 
 function L(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
-// positions: 선반 중심 비율 배열, selIdx: 선택 인덱스, shelfType: 'fixed'|'adj'
-function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfType){
-  const isAdj=(shelfType==='adj');
+// positions: 선반 중심 비율 배열, selIdx: 선택 인덱스, shelfTypes: 배열 또는 'fixed'|'adj'
+function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfTypes){
   for(let i=0;i<positions.length;i++){
+    const t=Array.isArray(shelfTypes)?(shelfTypes[i]||'fixed'):shelfTypes;
+    const isAdj=(t==='adj');
     const sy=y+positions[i]*h-Tpx/2;
     const isSel=(selIdx===i);
     // 배경색: 선택=파랑, 이동형=하늘색, 고정형=회색
