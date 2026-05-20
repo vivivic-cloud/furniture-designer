@@ -204,7 +204,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.3.0</span>
+    <span class="version-badge">v2.3.1</span>
   </div>
 
   <div class="main">
@@ -374,14 +374,17 @@ function sizeStr(){
   return `W ${S.w} × H ${S.h} × D ${S.d} mm  |  두께 ${S.T}mm / 후판 ${S.backT}mm${dado}`;
 }
 function dadoNoteStr(){
-  const {w:W,h:H,T,dadoW,dadoD,dadoPos,backT} = S;
+  const {w:W,h:H,d:D,T,dadoW,dadoD,dadoPos,backT} = S;
   const bW = (W-2*T) + 2*dadoD;
   const bH = (H-2*T) + 2*dadoD;
-  const warn = dadoD > T/2 ? ` ⚠ 홈 깊이가 T÷2(${Math.round(T/2)}mm) 초과` : '';
-  const warnW = dadoW !== backT ? ` ⚠ 홈 너비(${dadoW})≠후판 두께(${backT})` : '';
-  return `후판 재단: <b>${bW} × ${bH}mm</b> (홈 삽입 후 유효면 ${W-2*T}×${H-2*T}mm)<br>` +
-    `홈 스펙: 너비 ${dadoW}mm × 깊이 ${dadoD}mm  배면에서 ${dadoPos}mm<br>` +
-    `홈 위치: 배면 ${dadoPos}mm ~ ${dadoPos+dadoW}mm${warn}${warnW}`;
+  const shelfD = D - dadoPos - dadoW;  // 선반/내부 부재 유효 깊이
+  const warn  = dadoD > T/2   ? ` ⚠ 홈 깊이 T÷2(${Math.round(T/2)}mm) 초과` : '';
+  const warnW = dadoW !== backT ? ` ⚠ 홈 너비(${dadoW})≠후판두께(${backT})` : '';
+  const warnS = shelfD <= 0   ? ` ⚠ 배면여백+홈폭이 D를 초과!` : '';
+  return `후판 재단: <b>${bW} × ${bH}mm</b>  (유효 내부면 ${W-2*T}×${H-2*T}mm)<br>` +
+    `홈 위치: 배면 ${dadoPos}mm → 홈 ${dadoW}mm → 유효깊이까지<br>` +
+    `<b>선반·칸막이·서랍 유효 깊이: D(${D}) − ${dadoPos} − ${dadoW} = <span style="color:#e03">${shelfD}mm</span></b>` +
+    `${warn}${warnW}${warnS}`;
 }
 function updateDadoInfo(){
   const n=document.getElementById('dadoNote');
@@ -539,13 +542,13 @@ function step1(el) {
             <div class="dado-hint">≤ T÷2 권장</div>
           </div>
           <div class="dado-item">
-            <div class="dado-lbl">배면 거리</div>
+            <div class="dado-lbl">배면 여백</div>
             <div class="dado-row">
               <input class="dado-num" type="number" value="${S.dadoPos}" min="3" max="50"
                 oninput="S.dadoPos=parseInt(this.value)||S.dadoPos;updateDadoInfo()">
               <span class="unit">mm</span>
             </div>
-            <div class="dado-hint">배면→홈 앞날</div>
+            <div class="dado-hint">배면→홈 시작점</div>
           </div>
         </div>
         <div class="dado-note" id="dadoNote">${dadoNoteStr()}</div>
@@ -832,19 +835,21 @@ function calcParts() {
   parts.push({ g:'box', name:'후판', qty:1,
     w: backW, h: backH, t: backT, note: backNote });
 
-  // 4-1. dado 모드: 수직 칸막이에도 홈 표기
-  if (isDado && vCols > 1) {
-    // 수직 칸막이는 별도 항목에 홈 표기 추가 (아래에서 처리)
-  }
+  // ── 내부 부재 유효 깊이 (후판 앞면까지의 거리) ──────────
+  // 나사 고정: 후판이 배면에 밀착 → 유효깊이 = D - backT
+  // 홈 삽입:   후판이 dadoPos+dadoW 위치에 있음 → 유효깊이 = D - dadoPos - dadoW
+  const innerD = isDado ? r(D - dadoPos - dadoW) : r(D - backT);
+  const innerDNote = isDado
+    ? `D(${D}) - 배면여백(${dadoPos}) - 홈폭(${dadoW}) = ${innerD}`
+    : `D(${D}) - 후판(${backT}) = ${innerD}`;
 
   // 5. 수직 칸막이
   if (vCols > 1) {
-    const divDepth = isDado ? r(D - dadoPos - dadoW) : r(D - backT);
     const divNote = isDado
-      ? `깊이(${D}) - 배면거리(${dadoPos}) - 후판(${dadoW}) = ${divDepth}  [배면 홈 W${dadoW}×D${dadoD}]`
-      : `깊이(${D}) - 후판(${backT}) = ${D-backT}`;
+      ? `${innerDNote}  [배면 홈 W${dadoW}×D${dadoD}]`
+      : `깊이(${D}) - 후판(${backT}) = ${innerD}`;
     parts.push({ g:'div', name:'수직 칸막이', qty: vCols-1,
-      w: divDepth, h: r(innerH), t: T, note: divNote });
+      w: innerD, h: r(innerH), t: T, note: divNote });
   }
 
   // 6. 칸별 부재
@@ -853,26 +858,26 @@ function calcParts() {
     const c   = cols[ci];
     const lbl = vCols>1 ? ` (${LBL[ci]}칸)` : '';
     const cW  = colInnerW;
-    const cH  = r(innerH); // usable column height
+    const cH  = r(innerH);
 
     if (c.type === 'shelf') {
       const n = c.shelves||0;
       if (n>0)
         parts.push({ g:'shelf', name:`선반${lbl}`, qty:n,
-          w: cW, h: r(D - backT), t: T,
-          note:`칸 내부폭 ${cW} × 깊이(${D}-후판${backT})` });
+          w: cW, h: innerD, t: T,
+          note:`칸 내부폭 ${cW} × 유효깊이(${innerDNote})` });
 
     } else if (c.type === 'drawer') {
       const n   = Math.max(1, c.drawers||2);
-      const dFH = r(innerH/n - 4);       // 전면판 높이 (4mm 갭)
-      const dBH = r(dFH - T);            // 서랍 박스 측판 높이
-      const dBW = r(D - backT - T - 20); // 서랍 박스 깊이 (레일 여유 20mm)
+      const dFH = r(innerH/n - 4);
+      const dBH = r(dFH - T);
+      const dBW = r(innerD - T - 20); // 서랍 박스 깊이: 유효깊이 - 전면판T - 레일여유
       parts.push({ g:'drawer', name:`서랍 전면판${lbl}`, qty:n,
         w: cW, h: dFH, t: T,
         note:`${n}단 균등: (${cH}÷${n}) - 4mm 갭` });
       parts.push({ g:'drawer', name:`서랍 측판${lbl}`, qty:n*2,
         w: dBW, h: dBH, t: T,
-        note:`D(${D})-후판(${backT})-T(${T})-레일20 = ${dBW}` });
+        note:`유효깊이(${innerD})-T(${T})-레일20 = ${dBW}` });
       parts.push({ g:'drawer', name:`서랍 앞·뒷판${lbl}`, qty:n*2,
         w: r(cW - 2*T), h: dBH, t: T,
         note:`칸폭(${cW})-T×2(${2*T}) = ${r(cW-2*T)}` });
@@ -885,25 +890,25 @@ function calcParts() {
       const botH  = r(cH - topH);
       // 구분판
       parts.push({ g:'div', name:`혼합 구분판${lbl}`, qty:1,
-        w: cW, h: r(D - backT), t: T,
-        note:`선반/서랍 경계` });
+        w: cW, h: innerD, t: T,
+        note:`선반/서랍 경계  유효깊이(${innerDNote})` });
       // 선반
       const ns = c.shelves||2;
       if (ns>0)
         parts.push({ g:'shelf', name:`선반${lbl}`, qty:ns,
-          w: cW, h: r(D - backT), t: T,
-          note:`상단 ${topH}mm 영역` });
-      // 서랍 박스 전체
+          w: cW, h: innerD, t: T,
+          note:`상단 ${topH}mm 영역  유효깊이(${innerDNote})` });
+      // 서랍 박스
       const nd   = Math.max(1, c.drawers||2);
       const dFH2 = r(botH/nd - 4);
       const dBH2 = r(dFH2 - T);
-      const dBW2 = r(D - backT - T - 20);
+      const dBW2 = r(innerD - T - 20);
       parts.push({ g:'drawer', name:`서랍 전면판${lbl}`, qty:nd,
         w: cW, h: dFH2, t: T,
         note:`하단 ${botH}mm, ${nd}단` });
       parts.push({ g:'drawer', name:`서랍 측판${lbl}`, qty:nd*2,
         w: dBW2, h: dBH2, t: T,
-        note:`박스 깊이 = D-후판-T-레일여유` });
+        note:`유효깊이(${innerD})-T(${T})-레일20 = ${dBW2}` });
       parts.push({ g:'drawer', name:`서랍 앞·뒷판${lbl}`, qty:nd*2,
         w: r(cW - 2*T), h: dBH2, t: T,
         note:`서랍 박스 앞뒤` });
@@ -956,7 +961,7 @@ function renderParts() {
      후판: <b>${backWr} × ${backHr}</b> × T${backT}<br>
      칸 내부 폭 = (${W} − 2×${T}${vCols>1?` − ${vCols-1}×${T}`:''}) ÷ ${vCols}
      = <strong>${colInnerW}mm</strong>
-     ${isDadoR?`<br><span style="color:#4361ee">▪ 후판 홈 삽입: W${dW}×D${dD} @${dP}mm배면 — 측판·상판·지판 전면 적용</span>`:''}
+     ${isDadoR?`<br><span style="color:#4361ee">▪ 후판 홈 삽입: W${dW}×D${dD} @배면${dP}mm — 선반·칸막이·서랍 유효깊이 = ${D}-${dP}-${dW} = <b>${D-dP-dW}mm</b></span>`:''}
     `;
 
   const GCLS = {box:'',shelf:'g-shelf',door:'g-door',drawer:'g-drawer',div:'g-div'};
