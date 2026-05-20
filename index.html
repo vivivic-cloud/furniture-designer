@@ -252,7 +252,7 @@ function setThick(v) {
 }
 function setBackT(v) {
   S.backT=v;
-  document.querySelectorAll('.pill-btn').forEach(b=>b.classList.toggle('sel',parseInt(b.dataset.v)===v));
+  document.querySelectorAll('.pill-btn').forEach(b=>b.classList.toggle('sel',parseFloat(b.dataset.v)===v));
   const info=document.getElementById('sizeInfo'); if(info) info.textContent=sizeStr();
   draw(); if(document.getElementById('paneParts').classList.contains('active')) renderParts();
 }
@@ -332,7 +332,7 @@ function step1(el) {
     <div class="field">
       <label>후판 두께</label>
       <div class="pill-row">
-        ${[6,9,12,18].map(v=>`
+        ${[2.7,6,9,12,18].map(v=>`
           <button class="pill-btn ${S.backT===v?'sel':''}" data-v="${v}" onclick="setBackT(${v})">${v}mm</button>
         `).join('')}
       </div>
