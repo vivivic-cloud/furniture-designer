@@ -170,7 +170,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v1.9.0</span>
+    <span class="version-badge">v2.0.0</span>
   </div>
 
   <div class="main">
@@ -230,12 +230,14 @@ const S = {
   backT: 9,   // 후판 두께
   vCols: 1,
   cols: [{ type:'shelf', shelves:3, drawers:0 }],
+  topJoint:    'between', // 'between'=상판 끼움 | 'over'=상판 올라탐
+  bottomJoint: 'between', // 'between'=지판 끼움 | 'under'=지판 아래
   hasDoor: true,
   doorType: 'swing',
   handle: 'bar'
 };
 
-const TOTAL = 5;
+const TOTAL = 6;
 
 const FTYPES = [
   { id:'wardrobe', nm:'옷장 / 장롱', sub:'양문형·미닫이', w:1200,h:2000,d:580, ico:`
@@ -367,7 +369,7 @@ function render() {
   document.getElementById('btnPrev').style.display=S.step===0?'none':'';
   document.getElementById('btnNext').textContent=S.step===TOTAL-1?'완료':'다음 →';
   document.getElementById('btnNext').disabled=(S.step===0&&!S.type);
-  [step0,step1,step2,step3,step4][S.step](document.getElementById('stepBody'));
+  [step0,step1,step2,step3joint,step4,step5][S.step](document.getElementById('stepBody'));
   document.getElementById('surveyScroll').scrollTop=0;
   draw();
   if(document.getElementById('paneParts').classList.contains('active')) renderParts();
@@ -502,9 +504,104 @@ function renderColConfigs() {
   }).join('');
 }
 
-function step3(el) {
+function step3joint(el) {
   el.innerHTML=`
     <div class="step-label">STEP 4 / ${TOTAL}</div>
+    <div class="step-title">샌드 방향 설정</div>
+    <p style="font-size:11px;color:#888;margin-bottom:14px">상판·지판이 측판과 체결되는 방식을 선택하세요</p>
+
+    <div class="field" style="margin-bottom:18px">
+      <label style="margin-bottom:8px;font-weight:700">상판 체결 방식</label>
+      <div class="toggle-row">
+        <button class="tbtn ${S.topJoint==='between'?'sel':''}" onclick="S.topJoint='between';render()">
+          <div style="margin-bottom:6px">${svgJoint('top','between')}</div>
+          <div style="font-size:12px;font-weight:700">끼움형</div>
+          <div style="font-size:10px;color:#888">측판 사이에 상판 삽입</div>
+        </button>
+        <button class="tbtn ${S.topJoint==='over'?'sel':''}" onclick="S.topJoint='over';render()">
+          <div style="margin-bottom:6px">${svgJoint('top','over')}</div>
+          <div style="font-size:12px;font-weight:700">올라탐형</div>
+          <div style="font-size:10px;color:#888">측판 위로 상판 덮음</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label style="margin-bottom:8px;font-weight:700">지판(하판) 체결 방식</label>
+      <div class="toggle-row">
+        <button class="tbtn ${S.bottomJoint==='between'?'sel':''}" onclick="S.bottomJoint='between';render()">
+          <div style="margin-bottom:6px">${svgJoint('bottom','between')}</div>
+          <div style="font-size:12px;font-weight:700">끼움형</div>
+          <div style="font-size:10px;color:#888">측판 사이에 지판 삽입</div>
+        </button>
+        <button class="tbtn ${S.bottomJoint==='under'?'sel':''}" onclick="S.bottomJoint='under';render()">
+          <div style="margin-bottom:6px">${svgJoint('bottom','under')}</div>
+          <div style="font-size:12px;font-weight:700">아래형</div>
+          <div style="font-size:10px;color:#888">측판 아래에 지판 위치</div>
+        </button>
+      </div>
+    </div>
+
+    <div style="background:#f0f4ff;border-radius:8px;padding:10px 12px;font-size:11px;color:#444;line-height:1.8">
+      ${jointSummary()}
+    </div>`;
+}
+
+function svgJoint(pos, type) {
+  const w=72, h=44, t=8;
+  // pos: 'top'|'bottom', type: 'between'|'over'|'under'
+  let topY, botY, sideY1, sideY2, topW, botW;
+  if (pos==='top') {
+    if (type==='between') {
+      topY=4; sideY1=4; sideY2=h-4; topW=w-2*t-4;
+    } else { // over
+      topY=4; sideY1=4+t; sideY2=h-4; topW=w-4;
+    }
+    botY=null;
+  } else {
+    if (type==='between') {
+      botY=h-4-t; sideY1=4; sideY2=h-4;
+    } else { // under
+      botY=h-4-t; sideY1=4; sideY2=h-4-t;
+    }
+    topY=null;
+  }
+
+  const sideX1=4, sideX2=w-4-t;
+  const panelFill='#b0b8d0', sideFill='#c8d0e0';
+
+  let shapes='';
+  // 측판 2개
+  shapes+=`<rect x="${sideX1}" y="${sideY1}" width="${t}" height="${sideY2-sideY1}" fill="${sideFill}" stroke="#666" stroke-width="1"/>`;
+  shapes+=`<rect x="${sideX2}" y="${sideY1}" width="${t}" height="${sideY2-sideY1}" fill="${sideFill}" stroke="#666" stroke-width="1"/>`;
+  // 상판
+  if (pos==='top') {
+    const px = type==='between' ? sideX1+t+2 : sideX1;
+    const pw = type==='between' ? topW : topW;
+    shapes+=`<rect x="${px}" y="${topY}" width="${pw}" height="${t}" fill="${panelFill}" stroke="#4361ee" stroke-width="1.5"/>`;
+  }
+  // 하판
+  if (pos==='bottom') {
+    const px = type==='between' ? sideX1+t+2 : sideX1;
+    const pw = type==='between' ? w-2*t-2*2 : w-2*4;
+    shapes+=`<rect x="${px}" y="${botY}" width="${pw}" height="${t}" fill="${panelFill}" stroke="#4361ee" stroke-width="1.5"/>`;
+  }
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;margin:0 auto">${shapes}</svg>`;
+}
+
+function jointSummary() {
+  const {w:W, h:H, T, topJoint, bottomJoint} = S;
+  const sideH = H - (topJoint==='over'?T:0) - (bottomJoint==='under'?T:0);
+  const topW  = topJoint==='over'    ? W : W-2*T;
+  const botW  = bottomJoint==='under'? W : W-2*T;
+  return `<b>측판</b> 높이: ${sideH}mm &nbsp;|&nbsp;
+          <b>상판</b> 폭: ${topW}mm &nbsp;|&nbsp;
+          <b>지판</b> 폭: ${botW}mm`;
+}
+
+function step4(el) {
+  el.innerHTML=`
+    <div class="step-label">STEP 5 / ${TOTAL}</div>
     <div class="step-title">문을 설정하세요</div>
     <div class="field">
       <label>문 유무</label>
@@ -531,12 +628,14 @@ function step3(el) {
     </div>`:''}`;
 }
 
-function step4(el) {
+function step5(el) {
   const ft=FTYPES.find(f=>f.id===S.type);
   const parts=calcParts();
   const totalQty=parts.reduce((a,p)=>a+p.qty,0);
+  const jTop = S.topJoint==='over'    ? '올라탐형' : '끼움형';
+  const jBot = S.bottomJoint==='under' ? '아래형'   : '끼움형';
   el.innerHTML=`
-    <div class="step-label">STEP 5 / ${TOTAL}</div>
+    <div class="step-label">STEP 6 / ${TOTAL}</div>
     <div class="step-title">설계 완료 🎉</div>
     <div class="result-box">
       <div class="result-title">${ft?ft.nm:'가구'} 외형 완성</div>
@@ -545,6 +644,8 @@ function step4(el) {
         <span class="tag">D ${S.d}mm</span><span class="tag">두께 ${S.T}mm</span>
         <span class="tag">후판 ${S.backT}mm</span>
         <span class="tag">${S.vCols}칸</span>
+        <span class="tag">상판 ${jTop}</span>
+        <span class="tag">지판 ${jBot}</span>
         ${S.hasDoor?`<span class="tag">${S.doorType==='swing'?'여닫이':'미닫이'}문</span>`:'<span class="tag">오픈형</span>'}
       </div>
     </div>
@@ -558,34 +659,45 @@ function step4(el) {
 }
 
 // ── Parts calculation ─────────────────────────────────
-// 조립 기준: 측판이 상·하판을 감싸는 방식 (측판 높이 = 가구 전체 높이)
 function calcParts() {
-  const {w:W, h:H, d:D, T, backT, vCols, cols, hasDoor, doorType} = S;
-  const r = v => Math.round(v * 10) / 10; // round to 0.1mm
+  const {w:W, h:H, d:D, T, backT, vCols, cols, hasDoor, doorType, topJoint, bottomJoint} = S;
+  const r = v => Math.round(v * 10) / 10;
 
-  // ── 내부 치수 계산 ────────────────────────────────
-  // 측판(T) - 상판(T) - 하판(T) 기준
-  const innerW    = W - 2*T;                              // 상·하판 가로
-  const innerH    = H - 2*T;                              // 수직칸막이·후판 세로
-  // 각 칸의 내부 폭: 좌우 측판 + 칸막이(vCols-1개) 제외
+  // ── 샌드방향에 따른 치수 계산 ─────────────────────
+  // 측판 높이: 올라탐/아래형일 때 해당 방향으로 T만큼 감소
+  const sideH  = H - (topJoint==='over'    ? T : 0)
+                   - (bottomJoint==='under' ? T : 0);
+  // 상판 폭: 끼움=W-2T, 올라탐=W
+  const topW   = topJoint==='over'    ? W       : W - 2*T;
+  // 하판 폭: 끼움=W-2T, 아래=W
+  const botW   = bottomJoint==='under'? W       : W - 2*T;
+  // 내부 폭 (선반·칸막이): 항상 W-2T
+  const innerW = W - 2*T;
+  // 내부 높이: 항상 H-2T (상하판 두께 제외)
+  const innerH = H - 2*T;
   const colInnerW = r((innerW - (vCols-1)*T) / vCols);
+
+  const topNote    = topJoint==='over'
+    ? `올라탐형: W전체(${W})`
+    : `끼움형: W(${W})-측판2×T(${2*T}) = ${topW}`;
+  const botNote    = bottomJoint==='under'
+    ? `아래형: W전체(${W})`
+    : `끼움형: W(${W})-측판2×T(${2*T}) = ${botW}`;
+  const sideNote   = `H(${H})${topJoint==='over'?`-상판T(${T})`:''}${bottomJoint==='under'?`-지판T(${T})`:''} = ${sideH}`;
 
   const parts = [];
 
-  // 1. 측판 — 높이 통으로 재단
+  // 1. 측판
   parts.push({ g:'box', name:'측판', qty:2,
-    w: D, h: H, t: T,
-    note:`깊이×전체높이 (T${T} 통판)` });
+    w: D, h: r(sideH), t: T, note: sideNote });
 
   // 2. 상판
   parts.push({ g:'box', name:'상판', qty:1,
-    w: r(innerW), h: D, t: T,
-    note:`(W${W} - 측판2×T${T}) = ${r(innerW)}` });
+    w: r(topW), h: D, t: T, note: topNote });
 
-  // 3. 하판
-  parts.push({ g:'box', name:'하판', qty:1,
-    w: r(innerW), h: D, t: T,
-    note:`상판과 동일` });
+  // 3. 하판(지판)
+  parts.push({ g:'box', name:'지판 (하판)', qty:1,
+    w: r(botW), h: D, t: T, note: botNote });
 
   // 4. 후판
   parts.push({ g:'box', name:'후판', qty:1,
@@ -690,10 +802,17 @@ function renderParts() {
   const parts = calcParts();
 
   const colInnerW = Math.round(((W-2*T-(vCols-1)*T)/vCols)*10)/10;
+  const {topJoint, bottomJoint} = S;
+  const sideHd = H - (topJoint==='over'?T:0) - (bottomJoint==='under'?T:0);
+  const topWd  = topJoint==='over'    ? W : W-2*T;
+  const botWd  = bottomJoint==='under'? W : W-2*T;
   document.getElementById('assemblyNote').innerHTML =
-    `<strong>조립 기준 (측판 통판 방식)</strong><br>
-     측판: ${D} × ${H} × T${T} &nbsp;|&nbsp;
-     상·하판: ${W-2*T} × ${D} × T${T} &nbsp;|&nbsp;
+    `<strong>샌드방향:</strong>
+     상판 <b>${topJoint==='over'?'올라탐형':'끼움형'}</b> &nbsp;|&nbsp;
+     지판 <b>${bottomJoint==='under'?'아래형':'끼움형'}</b><br>
+     측판: ${D} × <b>${sideHd}</b> × T${T} &nbsp;|&nbsp;
+     상판: <b>${topWd}</b> × ${D} × T${T} &nbsp;|&nbsp;
+     지판: <b>${botWd}</b> × ${D} × T${T} &nbsp;|&nbsp;
      후판: ${W-2*T} × ${H-2*T} × T${backT}<br>
      칸 내부 폭 = (${W} − 2×${T}${vCols>1?` − ${vCols-1}×${T}`:''}) ÷ ${vCols}
      = <strong>${colInnerW}mm</strong>`;
@@ -755,21 +874,39 @@ function draw() {
   const Tpx=S.T*sc;
   const colW=fw/S.vCols;
 
-  // ── 측판 좌/우 (전체 높이 통판) ─────────────────────
-  ctx.fillStyle='#c8c8c8';
-  ctx.fillRect(ox,        oy, Tpx, fh);   // 좌 측판
-  ctx.fillRect(ox+fw-Tpx, oy, Tpx, fh);  // 우 측판
-  ctx.strokeStyle='#444'; ctx.lineWidth=1;
-  ctx.strokeRect(ox,        oy, Tpx, fh);
-  ctx.strokeRect(ox+fw-Tpx, oy, Tpx, fh);
+  // ── 샌드방향에 따른 측판·상판·지판 위치 계산 ─────────
+  const topOver   = S.topJoint    === 'over';
+  const botUnder  = S.bottomJoint === 'under';
+  const sideY1    = oy + (topOver  ? Tpx : 0);
+  const sideY2    = oy + fh - (botUnder ? Tpx : 0);
+  const sideHpx   = sideY2 - sideY1;
 
-  // ── 상판 / 하판 (측판 사이에 끼움) ──────────────────
+  // 상판 위치·폭
+  const topX = topOver  ? ox        : ox + Tpx;
+  const topW_px = topOver ? fw      : fw - 2*Tpx;
+  // 하판 위치·폭
+  const botX = botUnder ? ox        : ox + Tpx;
+  const botW_px = botUnder ? fw     : fw - 2*Tpx;
+
+  // ── 상판 ───────────────────────────────────────────
   ctx.fillStyle='#d8d8d8';
-  ctx.fillRect(ox+Tpx, oy,        fw-2*Tpx, Tpx);
-  ctx.fillRect(ox+Tpx, oy+fh-Tpx, fw-2*Tpx, Tpx);
+  ctx.fillRect(topX, oy, topW_px, Tpx);
   ctx.strokeStyle='#555'; ctx.lineWidth=1;
-  ctx.strokeRect(ox+Tpx, oy,        fw-2*Tpx, Tpx);
-  ctx.strokeRect(ox+Tpx, oy+fh-Tpx, fw-2*Tpx, Tpx);
+  ctx.strokeRect(topX, oy, topW_px, Tpx);
+
+  // ── 지판(하판) ─────────────────────────────────────
+  ctx.fillStyle='#d8d8d8';
+  ctx.fillRect(botX, oy+fh-Tpx, botW_px, Tpx);
+  ctx.strokeStyle='#555'; ctx.lineWidth=1;
+  ctx.strokeRect(botX, oy+fh-Tpx, botW_px, Tpx);
+
+  // ── 측판 좌/우 (샌드방향 반영 높이) ──────────────────
+  ctx.fillStyle='#c8c8c8';
+  ctx.fillRect(ox,        sideY1, Tpx, sideHpx);
+  ctx.fillRect(ox+fw-Tpx, sideY1, Tpx, sideHpx);
+  ctx.strokeStyle='#444'; ctx.lineWidth=1;
+  ctx.strokeRect(ox,        sideY1, Tpx, sideHpx);
+  ctx.strokeRect(ox+fw-Tpx, sideY1, Tpx, sideHpx);
 
   // ── 수직 칸막이 (두께 사각형) ──────────────────────
   for(let i=1;i<S.vCols;i++){
