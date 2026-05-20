@@ -143,6 +143,18 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 .sub-field label { font-size: 11px; color: #555; }
 .sub-field input[type=number] { width: 44px; padding: 3px 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; font-family: inherit; margin-left: 4px; }
 
+/* 고정형/이동형 선택 */
+.fxadj-row { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+.fxadj-lbl { font-size: 11px; color: #666; white-space: nowrap; }
+.fxadj-btn { padding: 3px 10px; border: 1px solid #ccc; border-radius: 14px; background: white; font-size: 11px; cursor: pointer; font-family: inherit; transition: all .13s; }
+.fxadj-btn.sel  { background: #4361ee; color: white; border-color: #4361ee; }
+.fxadj-btn.adj-sel { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+.div-type-section { background: #f8f9ff; border: 1px solid #e3e8ff; border-radius: 8px; padding: 9px 12px; margin-top: 4px; }
+.div-type-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.div-type-row:last-child { margin-bottom: 0; }
+/* 이동형 선반: 캔버스 범례 */
+.canvas-legend { display: flex; gap: 12px; font-size: 10px; color: #888; padding: 4px 8px; background:#f9f9f9; border-top: 1px solid #eee; flex-shrink:0; }
+
 .toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .tbtn { flex: 1; padding: 9px 6px; border: 2px solid #e8e8e8; border-radius: 8px; background: white; font-size: 13px; cursor: pointer; font-family: inherit; text-align: center; transition: all .15s; }
 .tbtn.sel { border-color: #4361ee; background: #eef0ff; color: #4361ee; font-weight: 600; }
@@ -204,7 +216,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.3.1</span>
+    <span class="version-badge">v2.4.0</span>
   </div>
 
   <div class="main">
@@ -228,6 +240,11 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
       <div class="tab-pane active" id="paneDraw">
         <div class="canvas-wrap" id="cvWrap">
           <canvas id="cv"></canvas>
+        </div>
+        <div class="canvas-legend">
+          <span>■ <span style="background:#d8d8d8;padding:0 6px;border-radius:2px;font-size:10px">고정형</span></span>
+          <span>■ <span style="background:#bde0f8;padding:0 6px;border-radius:2px;font-size:10px;color:#0369a1">이동형 (핀홀)</span></span>
+          <span style="margin-left:auto;color:#4361ee;font-size:10px">● 클릭→선택  드래그→이동</span>
         </div>
       </div>
 
@@ -267,6 +284,9 @@ const S = {
   topJoint:    'between', // 'between'=상판 끼움 | 'over'=상판 올라탐
   bottomJoint: 'between', // 'between'=지판 끼움 | 'under'=지판 아래
   vDivPos: [],     // 수직 칸막이 위치 (내부 폭 비율 0~1)
+  vDivTypes: [],   // 수직 칸막이 고정/이동형 ('fixed'|'adj')
+  topPanelPos: 0,  // 끼움형 상판 아래 이동 비율 (0=최상단, sideH 기준)
+  botPanelPos: 0,  // 끼움형 지판 위 이동 비율 (0=최하단)
   backJoint: 'nail', // 'nail'=나사고정 | 'dado'=홈 삽입
   dadoW: 9,          // 삽입 홈 너비 (mm, 후판 두께와 일치)
   dadoD: 10,         // 삽입 홈 깊이 (mm)
@@ -421,12 +441,17 @@ function ensureCols() {
     if(!c.shelfPos||c.shelfPos.length!==n)
       c.shelfPos=Array.from({length:n},(_,i)=>(i+1)/(n+1));
   }
-  // 수직 칸막이 위치 비율 초기화 (내부 폭 기준)
+  // 수직 칸막이 위치·타입 초기화
   const nDiv=S.vCols-1;
   if(!S.vDivPos||S.vDivPos.length!==nDiv)
     S.vDivPos=Array.from({length:nDiv},(_,i)=>(i+1)/S.vCols);
+  if(!S.vDivTypes||S.vDivTypes.length!==nDiv)
+    S.vDivTypes=Array.from({length:nDiv},()=>'fixed');
+  // 각 칸 선반 타입 초기화
+  for(let ci=0;ci<S.vCols;ci++)
+    if(!S.cols[ci].shelfType) S.cols[ci].shelfType='fixed';
 }
-function setVCols(n) { S.vCols=n; S.vDivPos=[]; ensureCols(); render(); }
+function setVCols(n) { S.vCols=n; S.vDivPos=[]; S.vDivTypes=[]; ensureCols(); render(); }
 function setColType(i,t) {
   S.cols[i].type=t;
   if(t==='drawer'&&!S.cols[i].drawers) S.cols[i].drawers=3;
@@ -620,6 +645,7 @@ function renderColConfigs() {
   el.innerHTML=S.cols.map((c,i)=>{
     const hs=c.type==='shelf'||c.type==='mixed';
     const hd=c.type==='drawer'||c.type==='mixed';
+    const st=c.shelfType||'fixed';
     return `<div class="col-card">
       <div class="col-card-title">${LBL[i]}칸</div>
       <div class="ctype-row">
@@ -632,8 +658,27 @@ function renderColConfigs() {
         ${hs?`<label>선반 수:<input type="number" value="${c.shelves}" min="0" max="15" oninput="setColShelves(${i},this.value)"></label>`:''}
         ${hd?`<label>서랍 수:<input type="number" value="${c.drawers||2}" min="1" max="12" oninput="setColDrawers(${i},this.value)"></label>`:''}
       </div>`:''}
+      ${hs?`<div class="fxadj-row">
+        <span class="fxadj-lbl">선반 형태:</span>
+        <button class="fxadj-btn ${st==='fixed'?'sel':''}"
+          onclick="S.cols[${i}].shelfType='fixed';renderColConfigs();draw()">고정형</button>
+        <button class="fxadj-btn ${st==='adj'?'adj-sel':''}"
+          onclick="S.cols[${i}].shelfType='adj';renderColConfigs();draw()">이동형 ●●●</button>
+      </div>`:''}
     </div>`;
-  }).join('');
+  }).join('')
+  // 수직 칸막이 타입 (칸 수 > 1)
+  + (S.vCols>1?`<div class="div-type-section">
+    <div style="font-size:11px;font-weight:700;color:#444;margin-bottom:7px">수직 칸막이 형태</div>
+    ${(S.vDivTypes||[]).map((dt,i)=>`
+      <div class="div-type-row">
+        <span class="fxadj-lbl">칸막이 ${i+1}:</span>
+        <button class="fxadj-btn ${dt==='fixed'?'sel':''}"
+          onclick="S.vDivTypes[${i}]='fixed';renderColConfigs();draw()">고정형</button>
+        <button class="fxadj-btn ${dt==='adj'?'adj-sel':''}"
+          onclick="S.vDivTypes[${i}]='adj';renderColConfigs();draw()">이동형 ●●●</button>
+      </div>`).join('')}
+  </div>`:'');
 }
 
 function step3joint(el) {
@@ -845,11 +890,14 @@ function calcParts() {
 
   // 5. 수직 칸막이
   if (vCols > 1) {
-    const divNote = isDado
-      ? `${innerDNote}  [배면 홈 W${dadoW}×D${dadoD}]`
-      : `깊이(${D}) - 후판(${backT}) = ${innerD}`;
-    parts.push({ g:'div', name:'수직 칸막이', qty: vCols-1,
-      w: innerD, h: r(innerH), t: T, note: divNote });
+    for(let di=0; di<vCols-1; di++){
+      const dvt = (S.vDivTypes||[])[di]==='adj' ? '  [이동형-선반핀]' : '  [고정형]';
+      const divNote = isDado
+        ? `${innerDNote}  [배면 홈 W${dadoW}×D${dadoD}]${dvt}`
+        : `깊이(${D}) - 후판(${backT}) = ${innerD}${dvt}`;
+      parts.push({ g:'div', name:`수직 칸막이${vCols>2?` ${di+1}`:''}`, qty:1,
+        w: innerD, h: r(innerH), t: T, note: divNote });
+    }
   }
 
   // 6. 칸별 부재
@@ -860,12 +908,13 @@ function calcParts() {
     const cW  = colInnerW;
     const cH  = r(innerH);
 
+    const stNote = (c.shelfType||'fixed')==='adj' ? '  [이동형-선반핀]' : '  [고정형]';
     if (c.type === 'shelf') {
       const n = c.shelves||0;
       if (n>0)
         parts.push({ g:'shelf', name:`선반${lbl}`, qty:n,
           w: cW, h: innerD, t: T,
-          note:`칸 내부폭 ${cW} × 유효깊이(${innerDNote})` });
+          note:`칸 내부폭 ${cW} × 유효깊이(${innerDNote})${stNote}` });
 
     } else if (c.type === 'drawer') {
       const n   = Math.max(1, c.drawers||2);
@@ -897,7 +946,7 @@ function calcParts() {
       if (ns>0)
         parts.push({ g:'shelf', name:`선반${lbl}`, qty:ns,
           w: cW, h: innerD, t: T,
-          note:`상단 ${topH}mm 영역  유효깊이(${innerDNote})` });
+          note:`상단 ${topH}mm 영역  유효깊이(${innerDNote})${stNote}` });
       // 서랍 박스
       const nd   = Math.max(1, c.drawers||2);
       const dFH2 = r(botH/nd - 4);
@@ -1031,12 +1080,18 @@ function draw() {
   const botX     = botUnder ? ox      : ox + Tpx;
   const botW_px  = botUnder ? fw      : fw - 2*Tpx;
 
-  // ── 내부 영역 픽셀 좌표 ──────────────────────────────
+  // ── 끼움형 상판/지판 위치 오프셋 (드래그 이동) ────────
+  const topOffPx = (S.topJoint==='between') ? (S.topPanelPos||0)*sideHpx : 0;
+  const botOffPx = (S.bottomJoint==='between') ? (S.botPanelPos||0)*sideHpx : 0;
+  const topPanelY = oy + topOffPx;              // 상판 윗면 y
+  const botPanelY = oy + fh - Tpx - botOffPx;  // 지판 윗면 y
+
+  // ── 내부 영역 픽셀 좌표 (오프셋 반영) ────────────────
   const innerXstart = ox + Tpx;
   const innerXend   = ox + fw - Tpx;
   const innerWpx    = innerXend - innerXstart;
-  const cy1 = oy + Tpx;
-  const cy2 = oy + fh - Tpx;
+  const cy1 = topPanelY + Tpx;   // 상판 아랫면 y
+  const cy2 = botPanelY;          // 지판 윗면 y
   const iH  = cy2 - cy1;
 
   // ── 수직 칸막이 중심 위치 (vDivPos 비율 → 픽셀) ───────
@@ -1046,25 +1101,37 @@ function draw() {
   // ── 열(column) 픽셀 경계 ────────────────────────────
   const colBounds = [];
   for(let ci=0;ci<S.vCols;ci++){
-    const cx1 = ci===0           ? innerXstart           : divCenters[ci-1] + Tpx/2;
-    const cx2 = ci===S.vCols-1  ? innerXend              : divCenters[ci]   - Tpx/2;
+    const cx1 = ci===0          ? innerXstart          : divCenters[ci-1] + Tpx/2;
+    const cx2 = ci===S.vCols-1 ? innerXend             : divCenters[ci]   - Tpx/2;
     colBounds.push({cx1, cx2});
   }
 
   // ── 마우스 인터랙션용 좌표 상태 저장 ─────────────────
-  _cs = {ox, oy, sc, fw, fh, Tpx, innerXstart, innerXend, innerWpx, colBounds, cy1, cy2};
+  _cs = {ox, oy, sc, fw, fh, Tpx, innerXstart, innerXend, innerWpx,
+         colBounds, cy1, cy2, sideHpx, topPanelY, botPanelY,
+         topX, topW_px, botX, botW_px};
 
   // ── 상판 ────────────────────────────────────────────
-  ctx.fillStyle='#d8d8d8';
-  ctx.fillRect(topX, oy, topW_px, Tpx);
-  ctx.strokeStyle='#555'; ctx.lineWidth=1;
-  ctx.strokeRect(topX, oy, topW_px, Tpx);
+  const isSelTop = _sel && _sel.type==='topPanel';
+  ctx.fillStyle = isSelTop ? '#bfdbfe' : '#d8d8d8';
+  ctx.fillRect(topX, topPanelY, topW_px, Tpx);
+  ctx.strokeStyle = isSelTop ? '#4361ee' : '#555';
+  ctx.lineWidth = isSelTop ? 2 : 1;
+  ctx.strokeRect(topX, topPanelY, topW_px, Tpx);
+  // 끼움형 상판이 이동된 경우: 위쪽 빈 공간 치수 표기
+  if(topOffPx > 4)
+    drawSpaceDims(ctx, topX, oy, topW_px, topOffPx, [], Tpx, sc);
 
   // ── 지판(하판) ──────────────────────────────────────
-  ctx.fillStyle='#d8d8d8';
-  ctx.fillRect(botX, oy+fh-Tpx, botW_px, Tpx);
-  ctx.strokeStyle='#555'; ctx.lineWidth=1;
-  ctx.strokeRect(botX, oy+fh-Tpx, botW_px, Tpx);
+  const isSelBot = _sel && _sel.type==='botPanel';
+  ctx.fillStyle = isSelBot ? '#bfdbfe' : '#d8d8d8';
+  ctx.fillRect(botX, botPanelY, botW_px, Tpx);
+  ctx.strokeStyle = isSelBot ? '#4361ee' : '#555';
+  ctx.lineWidth = isSelBot ? 2 : 1;
+  ctx.strokeRect(botX, botPanelY, botW_px, Tpx);
+  // 끼움형 지판이 이동된 경우: 아래쪽 빈 공간 치수 표기
+  if(botOffPx > 4)
+    drawSpaceDims(ctx, botX, oy+fh-botOffPx, botW_px, botOffPx, [], Tpx, sc);
 
   // ── 측판 좌/우 ──────────────────────────────────────
   ctx.fillStyle='#c8c8c8';
@@ -1074,15 +1141,25 @@ function draw() {
   ctx.strokeRect(ox,        sideY1, Tpx, sideHpx);
   ctx.strokeRect(ox+fw-Tpx, sideY1, Tpx, sideHpx);
 
-  // ── 수직 칸막이 (vDivPos 기반 위치) ─────────────────
+  // ── 수직 칸막이 (vDivPos 기반 위치, 고정/이동형 구분) ──
   for(let i=0;i<S.vCols-1;i++){
     const dx=divCenters[i]-Tpx/2;
     const isSelDiv=_sel&&_sel.type==='vdiv'&&_sel.idx===i;
-    ctx.fillStyle=isSelDiv?'#bfdbfe':'#d8d8d8';
+    const isDivAdj=(S.vDivTypes||[])[i]==='adj';
+    ctx.fillStyle=isSelDiv?'#bfdbfe':isDivAdj?'#bde0f8':'#d8d8d8';
     ctx.fillRect(dx, cy1, Tpx, iH);
-    ctx.strokeStyle=isSelDiv?'#4361ee':'#555';
-    ctx.lineWidth=isSelDiv?2:1;
+    ctx.strokeStyle=isSelDiv?'#4361ee':isDivAdj?'#0ea5e9':'#555';
+    ctx.lineWidth=isSelDiv?2:isDivAdj?1.2:1;
     ctx.strokeRect(dx, cy1, Tpx, iH);
+    // 이동형 칸막이: 핀홀 점 표시
+    if(isDivAdj&&Tpx>4){
+      const dotR=Math.max(1,Math.min(2.5,Tpx*0.18));
+      const spacing=Math.max(16,28*sc);
+      ctx.fillStyle=isSelDiv?'#4361ee':'#0ea5e9';
+      for(let dy=cy1+spacing;dy<cy2-spacing/2;dy+=spacing){
+        ctx.beginPath();ctx.arc(dx+Tpx/2,dy,dotR,0,Math.PI*2);ctx.fill();
+      }
+    }
   }
 
   // ── 칸별 내부 콘텐츠 + 공간 치수 표기 ───────────────
@@ -1092,9 +1169,10 @@ function draw() {
     const iW=cx2-cx1;
     const selShelfIdx=(_sel&&_sel.type==='shelf'&&_sel.ci===ci)?_sel.idx:-1;
 
+    const st=c.shelfType||'fixed';
     if(c.type==='shelf'||c.type==='open'){
       const positions=c.type==='open'?[]:(c.shelfPos||[]);
-      drawShelves(ctx,cx1,cy1,iW,iH,positions,Tpx,sc,selShelfIdx);
+      drawShelves(ctx,cx1,cy1,iW,iH,positions,Tpx,sc,selShelfIdx,st);
       drawSpaceDims(ctx,cx1,cy1,iW,iH,positions,Tpx,sc);
     } else if(c.type==='drawer'){
       drawDrawers(ctx,cx1,cy1,iW,iH,Math.max(1,c.drawers||2),sc);
@@ -1106,7 +1184,7 @@ function draw() {
       ctx.strokeRect(cx1,splitY,iW,Tpx);
       const topH=splitY-cy1;
       const positions=c.shelfPos||[];
-      drawShelves(ctx,cx1,cy1,iW,topH,positions,Tpx,sc,selShelfIdx);
+      drawShelves(ctx,cx1,cy1,iW,topH,positions,Tpx,sc,selShelfIdx,st);
       drawSpaceDims(ctx,cx1,cy1,iW,topH,positions,Tpx,sc);
       drawDrawers(ctx,cx1,splitY+Tpx,iW,cy2-(splitY+Tpx),Math.max(1,c.drawers||2),sc);
     }
@@ -1213,18 +1291,29 @@ function draw() {
 }
 
 function L(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
-// positions: 선반 중심의 비율 배열 (0~1), selIdx: 선택된 선반 인덱스 (-1=없음)
-function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx){
+// positions: 선반 중심 비율 배열, selIdx: 선택 인덱스, shelfType: 'fixed'|'adj'
+function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfType){
+  const isAdj=(shelfType==='adj');
   for(let i=0;i<positions.length;i++){
     const sy=y+positions[i]*h-Tpx/2;
     const isSel=(selIdx===i);
-    ctx.fillStyle=isSel?'#bfdbfe':'#d8d8d8';
+    // 배경색: 선택=파랑, 이동형=하늘색, 고정형=회색
+    ctx.fillStyle=isSel?'#bfdbfe':isAdj?'#bde0f8':'#d8d8d8';
     ctx.fillRect(x+1,sy,w-2,Tpx);
-    ctx.strokeStyle=isSel?'#4361ee':'#444';
-    ctx.lineWidth=isSel?2:1;
+    ctx.strokeStyle=isSel?'#4361ee':isAdj?'#0ea5e9':'#444';
+    ctx.lineWidth=isSel?2:isAdj?1.2:1;
     ctx.strokeRect(x+1,sy,w-2,Tpx);
+    // 이동형: 선반핀 홀 점 표시
+    if(isAdj&&Tpx>4){
+      const dotR=Math.max(1,Math.min(2.5,Tpx*0.18));
+      const spacing=Math.max(16,28*sc);
+      ctx.fillStyle=isSel?'#4361ee':'#0ea5e9';
+      for(let dx=x+spacing;dx<x+w-spacing/2;dx+=spacing){
+        ctx.beginPath();ctx.arc(dx,sy+Tpx/2,dotR,0,Math.PI*2);ctx.fill();
+      }
+    }
     if(Tpx>10&&sc){
-      ctx.fillStyle=isSel?'#4361ee':'#888';
+      ctx.fillStyle=isSel?'#4361ee':isAdj?'#0ea5e9':'#888';
       ctx.font=`${Math.max(7,Math.round(sc*7.5))}px 'Malgun Gothic',sans-serif`;
       ctx.textAlign='right';
       ctx.fillText(`T${S.T}`,x-2,sy+Tpx/2+3);
@@ -1322,15 +1411,28 @@ function dimV(ctx,x,y,len,lbl,col){
 let rTimer;
 window.addEventListener('resize',()=>{clearTimeout(rTimer);rTimer=setTimeout(draw,80);});
 
-// ── Canvas 마우스 인터랙션 (선반·칸막이 드래그) ─────────
+// ── Canvas 마우스 인터랙션 ────────────────────────────
 (function(){
   const cv=document.getElementById('cv');
 
   function hitTest(mx,my){
     if(!_cs.sc) return null;
-    const {Tpx,innerXstart,innerWpx,colBounds,cy1,cy2}=_cs;
+    const {Tpx,innerXstart,innerWpx,colBounds,cy1,cy2,
+           sideHpx,topPanelY,botPanelY,oy,topX,topW_px,botX,botW_px}=_cs;
     const hit=Math.max(10,Tpx+4);
 
+    // 끼움형 상판 히트 (끼움형일 때만)
+    if(S.topJoint==='between'){
+      const panelCY=topPanelY+Tpx/2;
+      if(Math.abs(my-panelCY)<hit&&mx>topX&&mx<topX+topW_px)
+        return{type:'topPanel'};
+    }
+    // 끼움형 지판 히트
+    if(S.bottomJoint==='between'){
+      const panelCY=botPanelY+Tpx/2;
+      if(Math.abs(my-panelCY)<hit&&mx>botX&&mx<botX+botW_px)
+        return{type:'botPanel'};
+    }
     // 수직 칸막이 히트
     for(let i=0;i<(S.vDivPos||[]).length;i++){
       const cx=innerXstart+S.vDivPos[i]*innerWpx;
@@ -1347,8 +1449,7 @@ window.addEventListener('resize',()=>{clearTimeout(rTimer);rTimer=setTimeout(dra
       const h=c.type==='mixed'?totalH*0.55:totalH;
       const y=cy1;
       for(let j=0;j<c.shelfPos.length;j++){
-        const sy=y+c.shelfPos[j]*h;
-        if(Math.abs(my-sy)<hit)
+        if(Math.abs(my-(y+c.shelfPos[j]*h))<hit)
           return{type:'shelf',ci,idx:j,h,y};
       }
     }
@@ -1358,34 +1459,45 @@ window.addEventListener('resize',()=>{clearTimeout(rTimer);rTimer=setTimeout(dra
   cv.addEventListener('mousedown',e=>{
     const rect=cv.getBoundingClientRect();
     const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-    const hit=hitTest(mx,my);
-    if(hit){
-      if(hit.type==='vdiv'){
-        _sel={type:'vdiv',idx:hit.idx};
-        _drag={type:'vdiv',idx:hit.idx,startX:mx,startPos:S.vDivPos[hit.idx]};
+    const h=hitTest(mx,my);
+    if(h){
+      if(h.type==='topPanel'){
+        _sel={type:'topPanel'};
+        _drag={type:'topPanel',startY:my,startPos:S.topPanelPos||0,sideHpx:_cs.sideHpx};
+      } else if(h.type==='botPanel'){
+        _sel={type:'botPanel'};
+        _drag={type:'botPanel',startY:my,startPos:S.botPanelPos||0,sideHpx:_cs.sideHpx};
+      } else if(h.type==='vdiv'){
+        _sel={type:'vdiv',idx:h.idx};
+        _drag={type:'vdiv',idx:h.idx,startX:mx,startPos:S.vDivPos[h.idx]};
       } else {
-        _sel={type:'shelf',ci:hit.ci,idx:hit.idx};
-        _drag={type:'shelf',ci:hit.ci,idx:hit.idx,startY:my,
-               startPos:S.cols[hit.ci].shelfPos[hit.idx],h:hit.h,y:hit.y};
+        _sel={type:'shelf',ci:h.ci,idx:h.idx};
+        _drag={type:'shelf',ci:h.ci,idx:h.idx,startY:my,
+               startPos:S.cols[h.ci].shelfPos[h.idx],h:h.h,y:h.y};
       }
     } else {
       _sel=null;
     }
-    draw();
-    e.preventDefault();
+    draw(); e.preventDefault();
   });
 
   cv.addEventListener('mousemove',e=>{
     const rect=cv.getBoundingClientRect();
     const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-    // 커서 업데이트
     const h=hitTest(mx,my);
     cv.style.cursor=h?(h.type==='vdiv'?'ew-resize':'ns-resize'):'default';
-
     if(!_drag) return;
     const{Tpx,innerWpx}=_cs;
 
-    if(_drag.type==='shelf'){
+    if(_drag.type==='topPanel'){
+      let newPos=_drag.startPos+(my-_drag.startY)/_drag.sideHpx;
+      S.topPanelPos=Math.max(0,Math.min(0.6,newPos));
+      draw();
+    } else if(_drag.type==='botPanel'){
+      let newPos=_drag.startPos-(my-_drag.startY)/_drag.sideHpx;
+      S.botPanelPos=Math.max(0,Math.min(0.6,newPos));
+      draw();
+    } else if(_drag.type==='shelf'){
       const dy=my-_drag.startY;
       const positions=S.cols[_drag.ci].shelfPos;
       let newPos=_drag.startPos+dy/_drag.h;
