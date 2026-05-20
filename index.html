@@ -514,13 +514,13 @@ function calcParts() {
         note:`${n}단 균등: (${cH}÷${n}) - 4mm 갭` });
       parts.push({ g:'drawer', name:`서랍 측판${lbl}`, qty:n*2,
         w: dBW, h: dBH, t: T,
-        note:`박스 깊이 = 깊이-후판-T-레일여유` });
+        note:`D(${D})-후판(${backT})-T(${T})-레일20 = ${dBW}` });
       parts.push({ g:'drawer', name:`서랍 앞·뒷판${lbl}`, qty:n*2,
         w: r(cW - 2*T), h: dBH, t: T,
-        note:`서랍 박스 앞뒤` });
+        note:`칸폭(${cW})-T×2(${2*T}) = ${r(cW-2*T)}` });
       parts.push({ g:'drawer', name:`서랍 바닥판${lbl}`, qty:n,
         w: r(cW - 2*T), h: dBW, t: backT,
-        note:`얇은 판재 사용` });
+        note:`후판 두께(${backT}) 사용` });
 
     } else if (c.type === 'mixed') {
       const topH  = r(cH * 0.55);
@@ -535,12 +535,23 @@ function calcParts() {
         parts.push({ g:'shelf', name:`선반${lbl}`, qty:ns,
           w: cW, h: r(D - backT), t: T,
           note:`상단 ${topH}mm 영역` });
-      // 서랍 전면판
-      const nd  = Math.max(1, c.drawers||2);
-      const dFH = r(botH/nd - 4);
+      // 서랍 박스 전체
+      const nd   = Math.max(1, c.drawers||2);
+      const dFH2 = r(botH/nd - 4);
+      const dBH2 = r(dFH2 - T);
+      const dBW2 = r(D - backT - T - 20);
       parts.push({ g:'drawer', name:`서랍 전면판${lbl}`, qty:nd,
-        w: cW, h: dFH, t: T,
+        w: cW, h: dFH2, t: T,
         note:`하단 ${botH}mm, ${nd}단` });
+      parts.push({ g:'drawer', name:`서랍 측판${lbl}`, qty:nd*2,
+        w: dBW2, h: dBH2, t: T,
+        note:`박스 깊이 = D-후판-T-레일여유` });
+      parts.push({ g:'drawer', name:`서랍 앞·뒷판${lbl}`, qty:nd*2,
+        w: r(cW - 2*T), h: dBH2, t: T,
+        note:`서랍 박스 앞뒤` });
+      parts.push({ g:'drawer', name:`서랍 바닥판${lbl}`, qty:nd,
+        w: r(cW - 2*T), h: dBW2, t: backT,
+        note:`얇은 판재 사용` });
     }
     // open: no additional parts
   }
