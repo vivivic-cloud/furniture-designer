@@ -216,7 +216,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.5.1</span>
+    <span class="version-badge">v2.6.0</span>
   </div>
 
   <div class="main">
@@ -245,6 +245,23 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
           <span>■ <span style="background:#d8d8d8;padding:0 6px;border-radius:2px;font-size:10px">고정형</span></span>
           <span>■ <span style="background:#bde0f8;padding:0 6px;border-radius:2px;font-size:10px;color:#0369a1">이동형 (핀홀)</span></span>
           <span style="margin-left:auto;color:#4361ee;font-size:10px">● 클릭→선택  드래그→이동</span>
+        </div>
+        <!-- 선반 위치 입력 바 -->
+        <div id="shelfPosBar" style="display:none;padding:7px 14px;background:#fff5f5;border-top:1.5px solid #fca5a5;align-items:center;gap:8px;flex-shrink:0;font-size:12px;">
+          <span style="color:#e03333;font-weight:700;font-size:13px" id="shelfPosLabel">선반 1</span>
+          <span style="color:#666">하단에서</span>
+          <input id="shelfPosInput" type="number" min="0" step="1"
+            style="width:72px;padding:4px 8px;border:1.5px solid #e03333;border-radius:6px;font-size:15px;font-weight:700;text-align:center;font-family:inherit;color:#1a1a2e;-moz-appearance:textfield;"
+            oninput="applyShelfPosInput(this.value)"
+            onchange="applyShelfPosInput(this.value)">
+          <span style="color:#666">mm</span>
+          <div style="display:flex;gap:3px;margin-left:4px">
+            <button onclick="nudgeShelf(-10)" style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−10</button>
+            <button onclick="nudgeShelf(-1)"  style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−1</button>
+            <button onclick="nudgeShelf(+1)"  style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+1</button>
+            <button onclick="nudgeShelf(+10)" style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+10</button>
+          </div>
+          <span id="shelfPosRange" style="margin-left:auto;color:#aaa;font-size:11px"></span>
         </div>
       </div>
 
@@ -1371,6 +1388,50 @@ function draw() {
     const colWmm=Math.round((cx2-cx1)/sc);
     ctx.fillText(`${colWmm}`,( cx1+cx2)/2,oy+fh+15);
   }
+
+  // ── 선택된 선반: 하단으로부터 거리 치수선 ─────────────
+  if(_sel&&_sel.type==='shelf'){
+    const {ci:sci,idx:sidx}=_sel;
+    const sc2=S.cols[sci];
+    if(sc2&&sc2.shelfPos&&sidx<sc2.shelfPos.length){
+      const {cx1:scx1,cx2:scx2}=colBounds[sci];
+      const iH2=cy2-cy1;
+      const topH2=sc2.type==='mixed'?iH2*0.55:iH2;
+      const pos2=sc2.shelfPos[sidx];
+      const shelfBotY=cy1+pos2*topH2+Tpx/2;
+      const dimLen=cy2-shelfBotY;
+      if(dimLen>10){
+        const ax=scx2-12;
+        const fromBotMm=Math.round(dimLen/sc);
+        const fntSz2=Math.max(9,Math.round(sc*10));
+        const R='#e03333';
+        ctx.save();
+        // 치수선
+        ctx.strokeStyle=R;ctx.fillStyle=R;ctx.lineWidth=1.5;
+        ctx.setLineDash([3,3]);
+        ctx.beginPath();ctx.moveTo(ax,shelfBotY);ctx.lineTo(ax,cy2);ctx.stroke();
+        ctx.setLineDash([]);
+        // 위 화살표 (선반 하면)
+        ctx.beginPath();ctx.moveTo(ax,shelfBotY);ctx.lineTo(ax-4,shelfBotY+9);ctx.lineTo(ax+4,shelfBotY+9);ctx.closePath();ctx.fill();
+        // 아래 화살표 (지판 내면)
+        ctx.beginPath();ctx.moveTo(ax,cy2);ctx.lineTo(ax-4,cy2-9);ctx.lineTo(ax+4,cy2-9);ctx.closePath();ctx.fill();
+        // 레이블 배지
+        const midY=(shelfBotY+cy2)/2;
+        ctx.font=`bold ${fntSz2}px 'Malgun Gothic',sans-serif`;
+        const lbl=`${fromBotMm}`;
+        const tw2=ctx.measureText(lbl).width;
+        const bx2=ax-tw2/2-4,by2=midY-fntSz2+1,bw2=tw2+8,bh2=fntSz2+4;
+        ctx.fillStyle='rgba(255,240,240,0.94)';
+        ctx.beginPath();ctx.roundRect?ctx.roundRect(bx2,by2,bw2,bh2,3):ctx.fillRect(bx2,by2,bw2,bh2);ctx.fill();
+        ctx.strokeStyle=R;ctx.lineWidth=0.8;
+        ctx.beginPath();ctx.roundRect?ctx.roundRect(bx2,by2,bw2,bh2,3):ctx.strokeRect(bx2,by2,bw2,bh2);ctx.stroke();
+        ctx.fillStyle=R;ctx.textAlign='center';
+        ctx.fillText(lbl,ax,midY+fntSz2/3);
+        ctx.restore();
+      }
+    }
+  }
+  syncShelfPosBar();
 }
 
 function L(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
@@ -1495,6 +1556,75 @@ function dimV(ctx,x,y,len,lbl,col){
 let rTimer;
 window.addEventListener('resize',()=>{clearTimeout(rTimer);rTimer=setTimeout(draw,80);});
 
+// ── 선반 하단 거리 계산 / 입력 핸들러 ─────────────────
+function _shelfEffH(ci){
+  // 해당 칸의 선반이 위치하는 높이 범위(px)
+  if(!_cs.sc) return {areaY:0,areaH:0};
+  const {cy1,cy2}=_cs;
+  const iH=cy2-cy1;
+  const c=S.cols[ci];
+  return {areaY:cy1, areaH:(c&&c.type==='mixed')?iH*0.55:iH};
+}
+function calcFromBottom(ci,idx){
+  // 선반 하면 → 지판 내면 거리 (mm)
+  if(!_cs.sc) return 0;
+  const c=S.cols[ci];
+  if(!c||!c.shelfPos||idx>=c.shelfPos.length) return 0;
+  const {cy2,Tpx,sc}=_cs;
+  const {areaY,areaH}=_shelfEffH(ci);
+  const shelfBotY=areaY+c.shelfPos[idx]*areaH+Tpx/2;
+  return Math.round((cy2-shelfBotY)/sc);
+}
+function syncShelfPosBar(){
+  const bar=document.getElementById('shelfPosBar');
+  if(!bar) return;
+  if(!_sel||_sel.type!=='shelf'||!_cs.sc){bar.style.display='none';return;}
+  const {ci,idx}=_sel;
+  const c=S.cols[ci];
+  if(!c||!c.shelfPos||idx>=c.shelfPos.length){bar.style.display='none';return;}
+  bar.style.display='flex';
+  const LBL=['A','B','C','D'];
+  const lbl=document.getElementById('shelfPosLabel');
+  if(lbl) lbl.textContent=`${S.vCols>1?LBL[ci]+'칸 ':''}선반 ${idx+1}`;
+  const input=document.getElementById('shelfPosInput');
+  if(input&&document.activeElement!==input) input.value=calcFromBottom(ci,idx);
+  const range=document.getElementById('shelfPosRange');
+  if(range){
+    const {cy1,cy2,Tpx,sc}=_cs;
+    const {areaH}=_shelfEffH(ci);
+    const iHmm=Math.round(areaH/sc);
+    const Tmm=S.T;
+    range.textContent=`범위 ${Tmm}~${iHmm-Tmm}mm`;
+  }
+}
+function applyShelfPosInput(val){
+  if(!_sel||_sel.type!=='shelf') return;
+  const {ci,idx}=_sel;
+  const c=S.cols[ci];
+  if(!c||!c.shelfPos) return;
+  const fromBot=parseFloat(val);
+  if(isNaN(fromBot)||fromBot<0) return;
+  const {cy1,cy2,Tpx,sc}=_cs;
+  if(!sc) return;
+  const {areaY,areaH}=_shelfEffH(ci);
+  // shelfBotY = cy2 - fromBot*sc  →  pos = (shelfBotY - Tpx/2 - areaY) / areaH
+  const shelfBotY=cy2-fromBot*sc;
+  let newPos=(shelfBotY-Tpx/2-areaY)/areaH;
+  const positions=c.shelfPos;
+  const minGap=Tpx/areaH+0.01;
+  const lo=idx>0?positions[idx-1]+minGap:minGap/2;
+  const hi=idx<positions.length-1?positions[idx+1]-minGap:1-minGap/2;
+  positions[idx]=Math.max(lo,Math.min(hi,newPos));
+  draw();
+}
+function nudgeShelf(deltaMm){
+  if(!_sel||_sel.type!=='shelf') return;
+  const cur=calcFromBottom(_sel.ci,_sel.idx);
+  applyShelfPosInput(cur+deltaMm);
+  const input=document.getElementById('shelfPosInput');
+  if(input) input.value=calcFromBottom(_sel.ci,_sel.idx);
+}
+
 // ── Canvas 마우스 인터랙션 ────────────────────────────
 (function(){
   const cv=document.getElementById('cv');
@@ -1562,7 +1692,7 @@ window.addEventListener('resize',()=>{clearTimeout(rTimer);rTimer=setTimeout(dra
     } else {
       _sel=null;
     }
-    draw(); e.preventDefault();
+    draw(); syncShelfPosBar(); e.preventDefault();
   });
 
   cv.addEventListener('mousemove',e=>{
