@@ -48,9 +48,36 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; }
 .field-row { display: flex; align-items: center; gap: 8px; }
-.field-row input[type=range] { flex: 1; accent-color: #4361ee; }
+.field-row input[type=range] { flex: 1; accent-color: #4361ee; margin-top: 4px; }
 .field-row input[type=number] { width: 72px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; font-family: inherit; text-align: right; }
 .field-row input:focus { outline: none; border-color: #4361ee; }
+
+/* 외경 크기 입력 전용 */
+.size-input-wrap { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.size-input-wrap label { font-size: 12px; color: #555; font-weight: 600; }
+.size-input-row { display: flex; align-items: center; gap: 6px; }
+.size-num {
+  flex: 1; padding: 9px 12px;
+  border: 1.5px solid #ccc; border-radius: 8px;
+  font-size: 18px; font-weight: 700; font-family: inherit;
+  text-align: center; color: #1a1a2e;
+  transition: border-color .15s, box-shadow .15s;
+  -moz-appearance: textfield;
+}
+.size-num::-webkit-inner-spin-button,
+.size-num::-webkit-outer-spin-button { -webkit-appearance: none; }
+.size-num:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,.15); }
+.size-num.changed { border-color: #2a9d8f; }
+.step-btn {
+  width: 34px; height: 42px; border: 1.5px solid #ddd; border-radius: 8px;
+  background: white; font-size: 18px; color: #555; cursor: pointer;
+  font-family: inherit; transition: all .12s; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-btn:hover { background: #eef0ff; border-color: #4361ee; color: #4361ee; }
+.step-btn:active { transform: scale(.93); }
+.size-slider { width: 100%; accent-color: #4361ee; }
 .unit { font-size: 11px; color: #999; }
 
 .size-summary { margin-top: 4px; padding: 7px 10px; background: #f0f8ff; border-radius: 6px; font-size: 11px; color: #555; font-weight: 600; }
@@ -143,7 +170,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v1.8.0</span>
+    <span class="version-badge">v1.9.0</span>
   </div>
 
   <div class="main">
@@ -397,17 +424,44 @@ function step1(el) {
     <div class="size-summary" id="sizeInfo">${sizeStr()}</div>`;
 }
 
-function mkSlider(key,label,min,max) {
-  return `<div class="field">
-    <label>${label} <span class="unit">mm</span></label>
-    <div class="field-row">
-      <input id="sl_${key}" type="range" min="${min}" max="${max}" value="${S[key]}"
-        oninput="syncSize('${key}',this.value)">
-      <input id="nm_${key}" type="number" value="${S[key]}" min="${min}" max="${max}"
-        oninput="syncSize('${key}',this.value)">
-      <span class="unit">mm</span>
+function mkSlider(key, label, min, max) {
+  const step = key==='d' ? 5 : 10;
+  return `<div class="size-input-wrap">
+    <label>${label} <span class="unit" style="font-weight:400">mm</span></label>
+    <div class="size-input-row">
+      <button class="step-btn" onmousedown="startStep('${key}',-${step},event)" onmouseup="stopStep()" onmouseleave="stopStep()">−</button>
+      <input id="nm_${key}" class="size-num" type="number" value="${S[key]}" min="${min}" max="${max}"
+        onfocus="this.select()"
+        oninput="syncSize('${key}',this.value)"
+        onchange="syncSize('${key}',this.value)"
+        onkeydown="if(event.key==='Enter'){this.blur();syncSize('${key}',this.value);}">
+      <button class="step-btn" onmousedown="startStep('${key}',${step},event)" onmouseup="stopStep()" onmouseleave="stopStep()">+</button>
     </div>
+    <input id="sl_${key}" class="size-slider" type="range" min="${min}" max="${max}" value="${S[key]}"
+      oninput="syncSize('${key}',this.value)">
   </div>`;
+}
+
+let _stepTimer=null, _stepRAF=null;
+function startStep(key, delta, e) {
+  e.preventDefault();
+  function doStep(){
+    const nm=document.getElementById('nm_'+key);
+    const min=parseInt(nm.min), max=parseInt(nm.max);
+    const v=Math.min(max, Math.max(min, (parseInt(nm.value)||S[key]) + delta));
+    syncSize(key, v);
+    nm.classList.add('changed');
+    setTimeout(()=>nm.classList.remove('changed'),200);
+  }
+  doStep();
+  _stepTimer=setTimeout(()=>{
+    function loop(){ doStep(); _stepRAF=requestAnimationFrame(loop); }
+    loop();
+  }, 400);
+}
+function stopStep(){
+  clearTimeout(_stepTimer); _stepTimer=null;
+  if(_stepRAF){ cancelAnimationFrame(_stepRAF); _stepRAF=null; }
 }
 
 function step2(el) {
