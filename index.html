@@ -216,7 +216,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.5.0</span>
+    <span class="version-badge">v2.5.1</span>
   </div>
 
   <div class="main">
@@ -395,14 +395,15 @@ function sizeStr(){
 }
 function dadoNoteStr(){
   const {w:W,h:H,d:D,T,dadoW,dadoD,dadoPos,backT} = S;
-  const bW = (W-2*T) + 2*dadoD;
-  const bH = (H-2*T) + 2*dadoD;
-  const shelfD = D - dadoPos - dadoW;  // 선반/내부 부재 유효 깊이
+  const bW_base = (W-2*T) + 2*dadoD;
+  const bH_base = (H-2*T) + 2*dadoD;
+  const bW = bW_base - 2;
+  const bH = bH_base - 2;
+  const shelfD = D - dadoPos - dadoW;
   const warn  = dadoD > T/2   ? ` ⚠ 홈 깊이 T÷2(${Math.round(T/2)}mm) 초과` : '';
   const warnW = dadoW !== backT ? ` ⚠ 홈 너비(${dadoW})≠후판두께(${backT})` : '';
   const warnS = shelfD <= 0   ? ` ⚠ 배면여백+홈폭이 D를 초과!` : '';
-  return `후판 재단: <b>${bW} × ${bH}mm</b>  (유효 내부면 ${W-2*T}×${H-2*T}mm)<br>` +
-    `홈 위치: 배면 ${dadoPos}mm → 홈 ${dadoW}mm → 유효깊이까지<br>` +
+  return `후판 재단: <b>${bW} × ${bH}mm</b>  <span style="color:#888;font-weight:400">(${bW_base}×${bH_base} − 조립여유2mm)</span><br>` +
     `<b>선반·칸막이·서랍 유효 깊이: D(${D}) − ${dadoPos} − ${dadoW} = <span style="color:#e03">${shelfD}mm</span></b>` +
     `${warn}${warnW}${warnS}`;
 }
@@ -948,12 +949,14 @@ function calcParts() {
   parts.push({ g:'box', name:'지판 (하판)', qty:1,
     w: r(botW), h: D, t: T, note: botNote + dadoSpec });
 
-  // 4. 후판 (dado 모드: 홈 깊이만큼 폭·높이 증가)
-  const backW = isDado ? r(innerW + 2*dadoD) : r(innerW);
-  const backH = isDado ? r(innerH + 2*dadoD) : r(innerH);
+  // 4. 후판 (dado 모드: 홈 깊이만큼 폭·높이 증가, 조립 여유 각 -2mm)
+  const backW_base = isDado ? r(innerW + 2*dadoD) : r(innerW);
+  const backH_base = isDado ? r(innerH + 2*dadoD) : r(innerH);
+  const backW = backW_base - 2;
+  const backH = backH_base - 2;
   const backNote = isDado
-    ? `홈 삽입: 유효면 ${r(innerW)}×${r(innerH)} + 삽입부 ${dadoD}×4면 → ${backW}×${backH}`
-    : `(H${H} - 상하판2×T${T}) = ${r(innerH)}`;
+    ? `홈 삽입: 유효면+삽입부 ${backW_base}×${backH_base} → 조립여유(-2) → ${backW}×${backH}`
+    : `내부면 ${backW_base}×${backH_base} → 조립여유(-2) → ${backW}×${backH}`;
   parts.push({ g:'box', name:'후판', qty:1,
     w: backW, h: backH, t: backT, note: backNote });
 
@@ -1078,8 +1081,8 @@ function renderParts() {
   const botWd  = bottomJoint==='under'? W : W-2*T;
   const isDadoR = S.backJoint === 'dado';
   const {dadoW:dW, dadoD:dD, dadoPos:dP} = S;
-  const backWr = isDadoR ? (W-2*T)+2*dD : W-2*T;
-  const backHr = isDadoR ? (H-2*T)+2*dD : H-2*T;
+  const backWr = (isDadoR ? (W-2*T)+2*dD : W-2*T) - 2;
+  const backHr = (isDadoR ? (H-2*T)+2*dD : H-2*T) - 2;
   document.getElementById('assemblyNote').innerHTML =
     `<strong>샌드방향:</strong>
      상판 <b>${topJoint==='over'?'올라탐형':'끼움형'}</b> &nbsp;|&nbsp;
