@@ -216,7 +216,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.4.0</span>
+    <span class="version-badge">v2.4.1</span>
   </div>
 
   <div class="main">
@@ -406,9 +406,55 @@ function dadoNoteStr(){
     `<b>선반·칸막이·서랍 유효 깊이: D(${D}) − ${dadoPos} − ${dadoW} = <span style="color:#e03">${shelfD}mm</span></b>` +
     `${warn}${warnW}${warnS}`;
 }
+function svgDadoDiagram(){
+  const {T, dadoW, dadoD, dadoPos} = S;
+  const svgW=270, svgH=158;
+  const ML=14, MR=52, MT=28, MB=36;
+  const drawW=svgW-ML-MR, drawH=svgH-MT-MB;
+  const extra=Math.max(20, Math.round(dadoPos*0.6));
+  const totalMm=dadoPos+dadoW+extra;
+  const scX=drawW/totalMm;
+  const scY=drawH/Math.max(T,1);
+  const px0=ML, py0=MT, pw=drawW, ph=drawH;
+  const gx1=px0+dadoPos*scX;
+  const gx2=px0+(dadoPos+dadoW)*scX;
+  const gdepth=Math.max(dadoD*scY, 16);
+  const gy1=py0+ph-gdepth, gy2=py0+ph;
+  const R='#e03333';
+  const fa=`font-size="10" font-weight="700" font-family="'Malgun Gothic',sans-serif" fill="${R}"`;
+  const ext=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${R}" stroke-width="1" stroke-dasharray="2.5,2" opacity="0.7"/>`;
+  const arr=(x1,y1,x2,y2)=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${R}" stroke-width="1.5" marker-start="url(#da)" marker-end="url(#da)"/>`;
+  const bp_y=py0+ph+16, aw_y=py0-14, ad_x=gx2+14;
+  return `<svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="da" markerWidth="7" markerHeight="7" refX="6.5" refY="3.5" orient="auto-start-reverse">
+      <path d="M0,0.5 L6.5,3.5 L0,6.5 Z" fill="${R}"/>
+    </marker>
+    <pattern id="wd" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="7" height="7" fill="#ddd4c0"/>
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#b09060" stroke-width="1.7"/>
+    </pattern>
+  </defs>
+  <rect x="${px0}" y="${py0}" width="${pw}" height="${ph}" fill="url(#wd)" stroke="#888" stroke-width="1.5"/>
+  <rect x="${gx1.toFixed(1)}" y="${gy1.toFixed(1)}" width="${Math.max(gx2-gx1,3).toFixed(1)}" height="${gdepth.toFixed(1)}" fill="white" stroke="#555" stroke-width="1"/>
+  <line x1="${px0}" y1="${py0}" x2="${px0}" y2="${py0+ph}" stroke="#222" stroke-width="3"/>
+  ${ext(px0,py0+ph+2,px0,bp_y+2)}
+  ${ext(gx1.toFixed(1),py0+ph+2,gx1.toFixed(1),bp_y+2)}
+  ${arr(px0+3,bp_y,gx1-3,bp_y)}
+  <text x="${((px0+gx1)/2).toFixed(1)}" y="${bp_y+13}" text-anchor="middle" ${fa}>${dadoPos}mm</text>
+  ${ext(gx1.toFixed(1),py0-2,gx1.toFixed(1),aw_y-2)}
+  ${ext(gx2.toFixed(1),py0-2,gx2.toFixed(1),aw_y-2)}
+  ${arr(gx1+3,aw_y,gx2-3,aw_y)}
+  <text x="${((gx1+gx2)/2).toFixed(1)}" y="${aw_y-4}" text-anchor="middle" ${fa}>${dadoW}mm</text>
+  ${ext((gx2+2).toFixed(1),gy1.toFixed(1),(ad_x+2).toFixed(1),gy1.toFixed(1))}
+  ${ext((gx2+2).toFixed(1),gy2.toFixed(1),(ad_x+2).toFixed(1),gy2.toFixed(1))}
+  ${arr(ad_x,gy1+3,ad_x,gy2-3)}
+  <text x="${ad_x+7}" y="${((gy1+gy2)/2+4).toFixed(1)}" text-anchor="start" ${fa}>${dadoD}mm</text>
+  </svg>`;
+}
 function updateDadoInfo(){
-  const n=document.getElementById('dadoNote');
-  if(n) n.innerHTML=dadoNoteStr();
+  const d=document.getElementById('dadoDiagram');
+  if(d) d.innerHTML=svgDadoDiagram();
   const s=document.getElementById('sizeInfo');
   if(s) s.textContent=sizeStr();
   draw();
@@ -544,9 +590,6 @@ function step1(el) {
       </div>
       ${S.backJoint==='dado'?`
       <div class="dado-box">
-        <div style="font-size:11px;color:#555;margin-bottom:6px">
-          측판·상판·지판에 홈을 파서 후판을 끼워 넣는 방식입니다.
-        </div>
         <div class="dado-grid">
           <div class="dado-item">
             <div class="dado-lbl">홈 너비</div>
@@ -576,7 +619,7 @@ function step1(el) {
             <div class="dado-hint">배면→홈 시작점</div>
           </div>
         </div>
-        <div class="dado-note" id="dadoNote">${dadoNoteStr()}</div>
+        <div id="dadoDiagram" style="margin-top:8px;display:flex;justify-content:center">${svgDadoDiagram()}</div>
       </div>`:''}
     </div>
 
