@@ -177,6 +177,7 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 
 .tab-pane { display: none; flex: 1; overflow: hidden; }
 .tab-pane.active { display: flex; }
+#paneDraw { position: relative; flex-direction: column; }
 
 /* canvas tab */
 .canvas-wrap { flex: 1; overflow: auto; background: #e8ecf0; display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -246,38 +247,33 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
           <span>■ <span style="background:#bde0f8;padding:0 6px;border-radius:2px;font-size:10px;color:#0369a1">이동형 (핀홀)</span></span>
           <span style="margin-left:auto;color:#4361ee;font-size:10px">● 클릭→선택  드래그→이동</span>
         </div>
-        <!-- 부속 편집 바 (선반 위치 + 깊이 단차) -->
-        <div id="partEditBar" style="display:none;padding:6px 12px;background:#f8f9ff;border-top:1.5px solid #c7d2fe;align-items:center;gap:6px;flex-shrink:0;font-size:12px;flex-wrap:wrap;">
-          <!-- 부속 이름 -->
-          <span id="partEditLabel" style="color:#4361ee;font-weight:700;font-size:13px;min-width:54px"></span>
+        <!-- 부속 편집 바: 캔버스 위 플로팅 -->
+        <div id="partEditBar" style="display:none;position:absolute;bottom:38px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(248,249,255,0.97);border:1.5px solid #c7d2fe;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;font-size:11px;box-shadow:0 3px 14px rgba(67,97,238,.18);white-space:nowrap;pointer-events:auto;">
+          <span id="partEditLabel" style="color:#4361ee;font-weight:700;font-size:11px;padding-right:4px;border-right:1px solid #ddd;margin-right:2px"></span>
           <!-- 위치 섹션 (선반만) -->
-          <div id="posEditSection" style="display:none;align-items:center;gap:5px;border-right:1px solid #ddd;padding-right:8px;margin-right:2px">
-            <span style="color:#777;font-size:11px">하단에서</span>
+          <div id="posEditSection" style="display:none;align-items:center;gap:3px;padding-right:6px;border-right:1px solid #ddd;margin-right:2px">
+            <span style="color:#888;font-size:10px">↕</span>
             <input id="shelfPosInput" type="number" min="0" step="1"
-              style="width:64px;padding:3px 6px;border:1.5px solid #4361ee;border-radius:6px;font-size:14px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;"
+              style="width:52px;padding:2px 5px;border:1.5px solid #4361ee;border-radius:10px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;background:white;"
               oninput="applyShelfPosInput(this.value)" onchange="applyShelfPosInput(this.value)">
-            <span style="color:#777;font-size:11px">mm</span>
-            <div style="display:flex;gap:2px">
-              <button onclick="nudgeShelf(-10)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−10</button>
-              <button onclick="nudgeShelf(-1)"  style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−1</button>
-              <button onclick="nudgeShelf(+1)"  style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+1</button>
-              <button onclick="nudgeShelf(+10)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+10</button>
-            </div>
-            <span id="shelfPosRange" style="color:#bbb;font-size:10px"></span>
+            <span style="color:#888;font-size:10px">mm</span>
+            <button onclick="nudgeShelf(-10)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">−10</button>
+            <button onclick="nudgeShelf(-1)"  style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">−1</button>
+            <button onclick="nudgeShelf(+1)"  style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">+1</button>
+            <button onclick="nudgeShelf(+10)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">+10</button>
+            <span id="shelfPosRange" style="color:#bbb;font-size:10px;margin-left:1px"></span>
           </div>
-          <!-- 깊이 단차 섹션 -->
-          <span style="color:#6366f1;font-size:11px;font-weight:600">깊이단차</span>
+          <!-- 깊이 단차 -->
+          <span style="color:#6366f1;font-size:10px;font-weight:600">단차</span>
           <input id="depthOffsetInput" type="number" step="1"
-            style="width:58px;padding:3px 6px;border:1.5px solid #6366f1;border-radius:6px;font-size:14px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;"
+            style="width:48px;padding:2px 5px;border:1.5px solid #6366f1;border-radius:10px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;background:white;"
             oninput="applyDepthOffset(this.value)" onchange="applyDepthOffset(this.value)">
-          <span style="color:#777;font-size:11px">mm</span>
-          <div style="display:flex;gap:2px">
-            <button onclick="nudgeDepthOffset(-5)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−5</button>
-            <button onclick="nudgeDepthOffset(-1)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−1</button>
-            <button onclick="nudgeDepthOffset(+1)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+1</button>
-            <button onclick="nudgeDepthOffset(+5)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+5</button>
-          </div>
-          <span id="depthRefLabel" style="margin-left:4px;color:#aaa;font-size:10px"></span>
+          <span style="color:#888;font-size:10px">mm</span>
+          <button onclick="nudgeDepthOffset(-5)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">−5</button>
+          <button onclick="nudgeDepthOffset(-1)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">−1</button>
+          <button onclick="nudgeDepthOffset(+1)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">+1</button>
+          <button onclick="nudgeDepthOffset(+5)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">+5</button>
+          <span id="depthRefLabel" style="color:#aaa;font-size:10px;margin-left:2px"></span>
         </div>
       </div>
 
