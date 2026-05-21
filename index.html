@@ -1575,10 +1575,13 @@ function calcFromBottom(ci,idx){
   const shelfBotY=areaY+c.shelfPos[idx]*areaH+Tpx/2;
   return Math.round((cy2-shelfBotY)/sc);
 }
+let _barSelKey=''; // 마지막으로 바에 표시된 선반 키 (선택 변경 감지용)
 function syncShelfPosBar(){
   const bar=document.getElementById('shelfPosBar');
   if(!bar) return;
-  if(!_sel||_sel.type!=='shelf'||!_cs.sc){bar.style.display='none';return;}
+  if(!_sel||_sel.type!=='shelf'||!_cs.sc){
+    bar.style.display='none'; _barSelKey=''; return;
+  }
   const {ci,idx}=_sel;
   const c=S.cols[ci];
   if(!c||!c.shelfPos||idx>=c.shelfPos.length){bar.style.display='none';return;}
@@ -1587,14 +1590,18 @@ function syncShelfPosBar(){
   const lbl=document.getElementById('shelfPosLabel');
   if(lbl) lbl.textContent=`${S.vCols>1?LBL[ci]+'칸 ':''}선반 ${idx+1}`;
   const input=document.getElementById('shelfPosInput');
-  if(input&&document.activeElement!==input) input.value=calcFromBottom(ci,idx);
+  const selKey=`${ci}-${idx}`;
+  // 선택된 선반이 바뀌었거나, 사용자가 입력 중이 아닐 때만 값 갱신
+  if(input&&(selKey!==_barSelKey||document.activeElement!==input)){
+    input.value=calcFromBottom(ci,idx);
+  }
+  _barSelKey=selKey;
   const range=document.getElementById('shelfPosRange');
   if(range){
-    const {cy1,cy2,Tpx,sc}=_cs;
+    const {sc}=_cs;
     const {areaH}=_shelfEffH(ci);
     const iHmm=Math.round(areaH/sc);
-    const Tmm=S.T;
-    range.textContent=`범위 ${Tmm}~${iHmm-Tmm}mm`;
+    range.textContent=`범위 ${S.T}~${iHmm-S.T}mm`;
   }
 }
 function applyShelfPosInput(val){
