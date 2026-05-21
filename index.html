@@ -216,7 +216,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.6.0</span>
+    <span class="version-badge">v2.7.0</span>
   </div>
 
   <div class="main">
@@ -246,22 +246,38 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
           <span>■ <span style="background:#bde0f8;padding:0 6px;border-radius:2px;font-size:10px;color:#0369a1">이동형 (핀홀)</span></span>
           <span style="margin-left:auto;color:#4361ee;font-size:10px">● 클릭→선택  드래그→이동</span>
         </div>
-        <!-- 선반 위치 입력 바 -->
-        <div id="shelfPosBar" style="display:none;padding:7px 14px;background:#fff5f5;border-top:1.5px solid #fca5a5;align-items:center;gap:8px;flex-shrink:0;font-size:12px;">
-          <span style="color:#e03333;font-weight:700;font-size:13px" id="shelfPosLabel">선반 1</span>
-          <span style="color:#666">하단에서</span>
-          <input id="shelfPosInput" type="number" min="0" step="1"
-            style="width:72px;padding:4px 8px;border:1.5px solid #e03333;border-radius:6px;font-size:15px;font-weight:700;text-align:center;font-family:inherit;color:#1a1a2e;-moz-appearance:textfield;"
-            oninput="applyShelfPosInput(this.value)"
-            onchange="applyShelfPosInput(this.value)">
-          <span style="color:#666">mm</span>
-          <div style="display:flex;gap:3px;margin-left:4px">
-            <button onclick="nudgeShelf(-10)" style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−10</button>
-            <button onclick="nudgeShelf(-1)"  style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−1</button>
-            <button onclick="nudgeShelf(+1)"  style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+1</button>
-            <button onclick="nudgeShelf(+10)" style="padding:3px 7px;border:1px solid #ccc;border-radius:5px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+10</button>
+        <!-- 부속 편집 바 (선반 위치 + 깊이 단차) -->
+        <div id="partEditBar" style="display:none;padding:6px 12px;background:#f8f9ff;border-top:1.5px solid #c7d2fe;align-items:center;gap:6px;flex-shrink:0;font-size:12px;flex-wrap:wrap;">
+          <!-- 부속 이름 -->
+          <span id="partEditLabel" style="color:#4361ee;font-weight:700;font-size:13px;min-width:54px"></span>
+          <!-- 위치 섹션 (선반만) -->
+          <div id="posEditSection" style="display:none;align-items:center;gap:5px;border-right:1px solid #ddd;padding-right:8px;margin-right:2px">
+            <span style="color:#777;font-size:11px">하단에서</span>
+            <input id="shelfPosInput" type="number" min="0" step="1"
+              style="width:64px;padding:3px 6px;border:1.5px solid #4361ee;border-radius:6px;font-size:14px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;"
+              oninput="applyShelfPosInput(this.value)" onchange="applyShelfPosInput(this.value)">
+            <span style="color:#777;font-size:11px">mm</span>
+            <div style="display:flex;gap:2px">
+              <button onclick="nudgeShelf(-10)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−10</button>
+              <button onclick="nudgeShelf(-1)"  style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−1</button>
+              <button onclick="nudgeShelf(+1)"  style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+1</button>
+              <button onclick="nudgeShelf(+10)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+10</button>
+            </div>
+            <span id="shelfPosRange" style="color:#bbb;font-size:10px"></span>
           </div>
-          <span id="shelfPosRange" style="margin-left:auto;color:#aaa;font-size:11px"></span>
+          <!-- 깊이 단차 섹션 -->
+          <span style="color:#6366f1;font-size:11px;font-weight:600">깊이단차</span>
+          <input id="depthOffsetInput" type="number" step="1"
+            style="width:58px;padding:3px 6px;border:1.5px solid #6366f1;border-radius:6px;font-size:14px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;"
+            oninput="applyDepthOffset(this.value)" onchange="applyDepthOffset(this.value)">
+          <span style="color:#777;font-size:11px">mm</span>
+          <div style="display:flex;gap:2px">
+            <button onclick="nudgeDepthOffset(-5)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−5</button>
+            <button onclick="nudgeDepthOffset(-1)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">−1</button>
+            <button onclick="nudgeDepthOffset(+1)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+1</button>
+            <button onclick="nudgeDepthOffset(+5)" style="padding:2px 6px;border:1px solid #ccc;border-radius:4px;background:white;font-size:11px;cursor:pointer;font-family:inherit">+5</button>
+          </div>
+          <span id="depthRefLabel" style="margin-left:4px;color:#aaa;font-size:10px"></span>
         </div>
       </div>
 
@@ -308,6 +324,11 @@ const S = {
   dadoW: 9,          // 삽입 홈 너비 (mm, 후판 두께와 일치)
   dadoD: 10,         // 삽입 홈 깊이 (mm)
   dadoPos: 12,       // 배면에서 홈 앞날까지의 거리 (mm)
+  // 깊이 단차 (측판 기준, mm, +앞으로 / -뒤로)
+  topDepthOffset: 0,
+  botDepthOffset: 0,
+  vDivDepthOffsets: [],   // 수직 칸막이별
+  // 선반별: c.shelfDepthOffsets 배열
   hasDoor: true,
   doorType: 'swing',
   handle: 'bar'
@@ -511,16 +532,22 @@ function ensureCols() {
     S.vDivPos=Array.from({length:nDiv},(_,i)=>(i+1)/S.vCols);
   if(!S.vDivTypes||S.vDivTypes.length!==nDiv)
     S.vDivTypes=Array.from({length:nDiv},()=>'fixed');
-  // 각 칸 선반 타입 배열 초기화 (선반별 개별 고정/이동형)
+  // 각 칸 선반 타입·깊이오프셋 배열 초기화
   for(let ci=0;ci<S.vCols;ci++){
     const c=S.cols[ci];
     const n=(c.type==='shelf'||c.type==='mixed')?(c.shelves||0):0;
-    const def=c.shelfType||'fixed'; // 기존 단일 타입 호환
+    const def=c.shelfType||'fixed';
     if(!c.shelfTypes||c.shelfTypes.length!==n)
       c.shelfTypes=Array.from({length:n},()=>def);
+    if(!c.shelfDepthOffsets||c.shelfDepthOffsets.length!==n)
+      c.shelfDepthOffsets=Array.from({length:n},(_,i)=>c.shelfDepthOffsets?.(i)||0);
   }
+  // 수직 칸막이 깊이오프셋
+  const nDiv2=S.vCols-1;
+  if(!S.vDivDepthOffsets||S.vDivDepthOffsets.length!==nDiv2)
+    S.vDivDepthOffsets=Array.from({length:nDiv2},(_,i)=>S.vDivDepthOffsets?.(i)||0);
 }
-function setVCols(n) { S.vCols=n; S.vDivPos=[]; S.vDivTypes=[]; ensureCols(); render(); }
+function setVCols(n) { S.vCols=n; S.vDivPos=[]; S.vDivTypes=[]; S.vDivDepthOffsets=[]; ensureCols(); render(); }
 function setColType(i,t) {
   S.cols[i].type=t;
   if(t==='drawer'&&!S.cols[i].drawers) S.cols[i].drawers=3;
@@ -528,16 +555,19 @@ function setColType(i,t) {
   const n=(t==='shelf'||t==='mixed')?(S.cols[i].shelves||0):0;
   S.cols[i].shelfPos=Array.from({length:n},(_,j)=>(j+1)/(n+1));
   S.cols[i].shelfTypes=Array.from({length:n},()=>'fixed');
+  S.cols[i].shelfDepthOffsets=Array.from({length:n},()=>0);
   renderColConfigs(); draw();
   if(document.getElementById('paneParts').classList.contains('active')) renderParts();
 }
 function setColShelves(i,v){
   const n=parseInt(v)||0;
-  const prev=S.cols[i].shelfTypes||[];
+  const prevT=S.cols[i].shelfTypes||[];
+  const prevD=S.cols[i].shelfDepthOffsets||[];
   S.cols[i].shelves=n;
   S.cols[i].shelfPos=Array.from({length:n},(_,j)=>(j+1)/(n+1));
-  // 기존 타입 유지, 새 선반은 기본 고정형
-  S.cols[i].shelfTypes=Array.from({length:n},(_,j)=>prev[j]||'fixed');
+  // 기존 타입·오프셋 유지, 새 선반은 기본값
+  S.cols[i].shelfTypes=Array.from({length:n},(_,j)=>prevT[j]||'fixed');
+  S.cols[i].shelfDepthOffsets=Array.from({length:n},(_,j)=>prevD[j]||0);
   renderColConfigs(); draw();
   if(document.getElementById('paneParts').classList.contains('active'))renderParts();
 }
@@ -958,13 +988,17 @@ function calcParts() {
   parts.push({ g:'box', name:'측판', qty:2,
     w: D, h: r(sideH), t: T, note: sideNote + dadoSpec });
 
-  // 2. 상판
+  // 2. 상판 (깊이 단차 적용)
+  const topD = D + (S.topDepthOffset||0);
+  const topDNote = S.topDepthOffset ? ` [단차 ${S.topDepthOffset>0?'+':''}${S.topDepthOffset}mm → 실제 ${topD}mm]` : '';
   parts.push({ g:'box', name:'상판', qty:1,
-    w: r(topW), h: D, t: T, note: topNote + dadoSpec });
+    w: r(topW), h: topD, t: T, note: topNote + dadoSpec + topDNote });
 
-  // 3. 하판(지판)
+  // 3. 하판(지판) (깊이 단차 적용)
+  const botD = D + (S.botDepthOffset||0);
+  const botDNote = S.botDepthOffset ? ` [단차 ${S.botDepthOffset>0?'+':''}${S.botDepthOffset}mm → 실제 ${botD}mm]` : '';
   parts.push({ g:'box', name:'지판 (하판)', qty:1,
-    w: r(botW), h: D, t: T, note: botNote + dadoSpec });
+    w: r(botW), h: botD, t: T, note: botNote + dadoSpec + botDNote });
 
   // 4. 후판 (dado 모드: 홈 깊이만큼 폭·높이 증가, 조립 여유 각 -2mm)
   const backW_base = isDado ? r(innerW + 2*dadoD) : r(innerW);
@@ -985,15 +1019,18 @@ function calcParts() {
     ? `D(${D}) - 배면여백(${dadoPos}) - 홈폭(${dadoW}) = ${innerD}`
     : `D(${D}) - 후판(${backT}) = ${innerD}`;
 
-  // 5. 수직 칸막이
+  // 5. 수직 칸막이 (깊이 단차 적용)
   if (vCols > 1) {
     for(let di=0; di<vCols-1; di++){
       const dvt = (S.vDivTypes||[])[di]==='adj' ? '  [이동형-선반핀]' : '  [고정형]';
+      const dvOff = (S.vDivDepthOffsets||[])[di]||0;
+      const dvD = innerD + dvOff;
+      const dvOffNote = dvOff ? ` [단차 ${dvOff>0?'+':''}${dvOff}mm → ${dvD}mm]` : '';
       const divNote = isDado
-        ? `${innerDNote}  [배면 홈 W${dadoW}×D${dadoD}]${dvt}`
-        : `깊이(${D}) - 후판(${backT}) = ${innerD}${dvt}`;
+        ? `${innerDNote}  [배면 홈 W${dadoW}×D${dadoD}]${dvt}${dvOffNote}`
+        : `깊이(${D}) - 후판(${backT}) = ${innerD}${dvt}${dvOffNote}`;
       parts.push({ g:'div', name:`수직 칸막이${vCols>2?` ${di+1}`:''}`, qty:1,
-        w: innerD, h: r(innerH), t: T, note: divNote });
+        w: dvD, h: r(innerH), t: T, note: divNote });
     }
   }
 
@@ -1011,10 +1048,25 @@ function calcParts() {
     const stNote=_stypes.length===0?'':_nAdj===0?'  [전체 고정형]':_nFixed===0?'  [전체 이동형-선반핀]':`  [고정형×${_nFixed} / 이동형×${_nAdj}]`;
     if (c.type === 'shelf') {
       const n = c.shelves||0;
-      if (n>0)
-        parts.push({ g:'shelf', name:`선반${lbl}`, qty:n,
-          w: cW, h: innerD, t: T,
-          note:`칸 내부폭 ${cW} × 유효깊이(${innerDNote})${stNote}` });
+      if (n>0){
+        // 깊이 단차별로 그룹핑
+        const depthMap=new Map();
+        for(let si=0;si<n;si++){
+          const off=(c.shelfDepthOffsets&&c.shelfDepthOffsets[si])||0;
+          const d=r(innerD+off);
+          const typeStr=(c.shelfTypes&&c.shelfTypes[si])||'fixed';
+          const key=`${d}_${typeStr}`;
+          if(!depthMap.has(key)) depthMap.set(key,{d,off,typeStr,cnt:0});
+          depthMap.get(key).cnt++;
+        }
+        for(const {d,off,typeStr,cnt} of depthMap.values()){
+          const tNote=typeStr==='adj'?'  [이동형-선반핀]':'  [고정형]';
+          const oNote=off?` [단차 ${off>0?'+':''}${off}mm]`:'';
+          parts.push({ g:'shelf', name:`선반${lbl}`, qty:cnt,
+            w: cW, h: d, t: T,
+            note:`유효깊이(${innerDNote})${oNote}${tNote}` });
+        }
+      }
 
     } else if (c.type === 'drawer') {
       const n   = Math.max(1, c.drawers||2);
@@ -1041,12 +1093,26 @@ function calcParts() {
       parts.push({ g:'div', name:`혼합 구분판${lbl}`, qty:1,
         w: cW, h: innerD, t: T,
         note:`선반/서랍 경계  유효깊이(${innerDNote})` });
-      // 선반
+      // 선반 (깊이 단차 그룹핑)
       const ns = c.shelves||2;
-      if (ns>0)
-        parts.push({ g:'shelf', name:`선반${lbl}`, qty:ns,
-          w: cW, h: innerD, t: T,
-          note:`상단 ${topH}mm 영역  유효깊이(${innerDNote})${stNote||''}` });
+      if (ns>0){
+        const depthMapM=new Map();
+        for(let si=0;si<ns;si++){
+          const off=(c.shelfDepthOffsets&&c.shelfDepthOffsets[si])||0;
+          const d=r(innerD+off);
+          const typeStr=(c.shelfTypes&&c.shelfTypes[si])||'fixed';
+          const key=`${d}_${typeStr}`;
+          if(!depthMapM.has(key)) depthMapM.set(key,{d,off,typeStr,cnt:0});
+          depthMapM.get(key).cnt++;
+        }
+        for(const {d,off,typeStr,cnt} of depthMapM.values()){
+          const tNote=typeStr==='adj'?'  [이동형-선반핀]':'  [고정형]';
+          const oNote=off?` [단차 ${off>0?'+':''}${off}mm]`:'';
+          parts.push({ g:'shelf', name:`선반${lbl}`, qty:cnt,
+            w: cW, h: d, t: T,
+            note:`상단구역 유효깊이(${innerDNote})${oNote}${tNote}` });
+        }
+      }
       // 서랍 박스
       const nd   = Math.max(1, c.drawers||2);
       const dFH2 = r(botH/nd - 4);
@@ -1575,33 +1641,92 @@ function calcFromBottom(ci,idx){
   const shelfBotY=areaY+c.shelfPos[idx]*areaH+Tpx/2;
   return Math.round((cy2-shelfBotY)/sc);
 }
-let _barSelKey=''; // 마지막으로 바에 표시된 선반 키 (선택 변경 감지용)
+let _barSelKey='';
+// ── 깊이 단차 헬퍼 ──────────────────────────────────
+function getDepthOffset(){
+  if(!_sel) return 0;
+  const {type,ci,idx}=_sel;
+  if(type==='shelf') return (S.cols[ci]?.shelfDepthOffsets?.[idx])||0;
+  if(type==='topPanel') return S.topDepthOffset||0;
+  if(type==='botPanel') return S.botDepthOffset||0;
+  if(type==='vdiv') return (S.vDivDepthOffsets?.[idx])||0;
+  return 0;
+}
+function setDepthOffset(val){
+  if(!_sel) return;
+  const v=Math.round(parseFloat(val));
+  if(isNaN(v)) return;
+  const {type,ci,idx}=_sel;
+  if(type==='shelf'){
+    if(!S.cols[ci].shelfDepthOffsets) S.cols[ci].shelfDepthOffsets=Array(S.cols[ci].shelfPos.length).fill(0);
+    S.cols[ci].shelfDepthOffsets[idx]=v;
+  } else if(type==='topPanel') S.topDepthOffset=v;
+  else if(type==='botPanel') S.botDepthOffset=v;
+  else if(type==='vdiv'){
+    if(!S.vDivDepthOffsets) S.vDivDepthOffsets=[];
+    S.vDivDepthOffsets[idx]=v;
+  }
+}
+function applyDepthOffset(val){
+  setDepthOffset(val);
+  const inp=document.getElementById('depthOffsetInput');
+  if(inp) inp.value=getDepthOffset();
+  draw();
+  if(document.getElementById('paneParts').classList.contains('active')) renderParts();
+}
+function nudgeDepthOffset(d){
+  applyDepthOffset(getDepthOffset()+d);
+}
+
 function syncShelfPosBar(){
-  const bar=document.getElementById('shelfPosBar');
+  const bar=document.getElementById('partEditBar');
   if(!bar) return;
-  if(!_sel||_sel.type!=='shelf'||!_cs.sc){
+  const TYPES=['shelf','topPanel','botPanel','vdiv'];
+  if(!_sel||!_cs.sc||!TYPES.includes(_sel.type)){
     bar.style.display='none'; _barSelKey=''; return;
   }
-  const {ci,idx}=_sel;
-  const c=S.cols[ci];
-  if(!c||!c.shelfPos||idx>=c.shelfPos.length){bar.style.display='none';return;}
   bar.style.display='flex';
+  const {type}=_sel;
   const LBL=['A','B','C','D'];
-  const lbl=document.getElementById('shelfPosLabel');
-  if(lbl) lbl.textContent=`${S.vCols>1?LBL[ci]+'칸 ':''}선반 ${idx+1}`;
-  const input=document.getElementById('shelfPosInput');
-  const selKey=`${ci}-${idx}`;
-  // 선택된 선반이 바뀌었거나, 사용자가 입력 중이 아닐 때만 값 갱신
-  if(input&&(selKey!==_barSelKey||document.activeElement!==input)){
-    input.value=calcFromBottom(ci,idx);
-  }
-  _barSelKey=selKey;
-  const range=document.getElementById('shelfPosRange');
-  if(range){
-    const {sc}=_cs;
-    const {areaH}=_shelfEffH(ci);
-    const iHmm=Math.round(areaH/sc);
-    range.textContent=`범위 ${S.T}~${iHmm-S.T}mm`;
+
+  // 부속 이름
+  const lbl=document.getElementById('partEditLabel');
+  if(lbl) lbl.textContent=
+    type==='topPanel'?'상판':type==='botPanel'?'지판':
+    type==='vdiv'?`칸막이 ${_sel.idx+1}`:
+    `${S.vCols>1?LBL[_sel.ci]+'칸 ':''}선반 ${_sel.idx+1}`;
+
+  // 위치 섹션 (선반만)
+  const posSection=document.getElementById('posEditSection');
+  if(posSection) posSection.style.display=type==='shelf'?'flex':'none';
+  if(type==='shelf'){
+    const {ci,idx}=_sel;
+    const c=S.cols[ci];
+    if(c&&c.shelfPos&&idx<c.shelfPos.length){
+      const selKey=`${ci}-${idx}`;
+      const input=document.getElementById('shelfPosInput');
+      if(input&&(selKey!==_barSelKey||document.activeElement!==input))
+        input.value=calcFromBottom(ci,idx);
+      _barSelKey=selKey;
+      const range=document.getElementById('shelfPosRange');
+      if(range){
+        const {sc}=_cs; const {areaH}=_shelfEffH(ci);
+        range.textContent=`범위 ${S.T}~${Math.round(areaH/sc)-S.T}mm`;
+      }
+    }
+  } else { _barSelKey=''; }
+
+  // 깊이 단차
+  const depthInp=document.getElementById('depthOffsetInput');
+  if(depthInp&&document.activeElement!==depthInp) depthInp.value=getDepthOffset();
+  const depthRef=document.getElementById('depthRefLabel');
+  if(depthRef){
+    const off=getDepthOffset();
+    const baseD=(type==='shelf')
+      ? (S.backJoint==='dado'?S.d-S.dadoPos-S.dadoW:S.d-S.backT)
+      : S.d;
+    const actual=baseD+off;
+    depthRef.textContent=off===0?`기준 ${baseD}mm`:`기준 ${baseD}mm → 실제 ${actual}mm`;
   }
 }
 function applyShelfPosInput(val){
