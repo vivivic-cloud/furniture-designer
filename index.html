@@ -561,7 +561,7 @@ function render() {
   document.getElementById('btnPrev').style.display=S.step===0?'none':'';
   document.getElementById('btnNext').textContent=S.step===TOTAL-1?'완료':'다음 →';
   document.getElementById('btnNext').disabled=(S.step===0&&!S.type);
-  [step0,step1,step2,step3joint,step4,step5][S.step](document.getElementById('stepBody'));
+  [step0,step1,step3joint,step2,step4,step5][S.step](document.getElementById('stepBody'));
   document.getElementById('surveyScroll').scrollTop=0;
   draw();
   if(document.getElementById('paneParts').classList.contains('active')) renderParts();
@@ -704,7 +704,7 @@ function stopStep(){
 function step2(el) {
   ensureCols();
   el.innerHTML=`
-    <div class="step-label">STEP 3 / ${TOTAL}</div>
+    <div class="step-label">STEP 4 / ${TOTAL}</div>
     <div class="step-title">칸 구성을 설정하세요</div>
     <div class="field" style="margin-bottom:16px">
       <label style="margin-bottom:8px">세로 칸 수 (열)</label>
@@ -785,7 +785,7 @@ function step3joint(el) {
      </button>`;
 
   el.innerHTML=`
-    <div class="step-label">STEP 4 / ${TOTAL}</div>
+    <div class="step-label">STEP 3 / ${TOTAL}</div>
     <div class="step-title">샌드 방향 설정</div>
 
     <div class="joint-section">
