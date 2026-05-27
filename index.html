@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.8.0</span>
+    <span class="version-badge">v2.9.0</span>
   </div>
 
   <div class="main">
@@ -317,9 +317,9 @@ const S = {
   topPanelPos: 0,  // 끼움형 상판 아래 이동 비율 (0=최상단, sideH 기준)
   botPanelPos: 0,  // 끼움형 지판 위 이동 비율 (0=최하단)
   backJoint: 'nail', // 'nail'=나사고정 | 'dado'=홈 삽입
-  dadoW: 9,          // 삽입 홈 너비 (mm, 후판 두께와 일치)
-  dadoD: 10,         // 삽입 홈 깊이 (mm)
-  dadoPos: 12,       // 배면에서 홈 앞날까지의 거리 (mm)
+  dadoW: 4,          // 삽입 홈 너비 (mm, 후판 두께와 일치)
+  dadoD: 6,          // 삽입 홈 깊이 (mm)
+  dadoPos: 20,       // 배면에서 홈 앞날까지의 거리 (mm)
   // 깊이 단차 (측판 기준, mm, +앞으로 / -뒤로)
   topDepthOffset: 0,
   botDepthOffset: 0,
@@ -1315,6 +1315,10 @@ function draw() {
   ctx.strokeRect(ox,        sideY1, Tpx, sideHpx);
   ctx.strokeRect(ox+fw-Tpx, sideY1, Tpx, sideHpx);
 
+  // ── 샌드방향 접합부 시각화 (측판/상판/지판 그린 뒤 즉시 표시) ───
+  drawJointSeams(ctx, {ox,oy,fw,fh,Tpx,topOver,botUnder,sideY1,
+    topX,topW_px,topPanelY,botX,botW_px,botPanelY});
+
   // ── 수직 칸막이 (vDivPos 기반 위치, 고정/이동형 구분) ──
   for(let i=0;i<S.vCols-1;i++){
     const dx=divCenters[i]-Tpx/2;
@@ -1708,6 +1712,69 @@ function dimV(ctx,x,y,len,lbl,col){
   tri(ctx,x,y,5,'d');tri(ctx,x,y+len,5,'u');
   ctx.save();ctx.translate(x+14,(y+y+len)/2);ctx.rotate(-Math.PI/2);
   ctx.font=`bold 11px 'Malgun Gothic',sans-serif`;ctx.textAlign='center';ctx.fillText(lbl,0,0);ctx.restore();
+}
+
+// ── 샌드방향 접합부 시각화 ─────────────────────────────
+// 올라탐형(over/under): 빨간 코너 하이라이트 + 수평 seam 점선
+// 끼움형(between):     초록 수직 seam 점선 (패널 끝이 측판 내면에 맞닿음)
+function drawJointSeams(ctx, p) {
+  const {ox,oy,fw,fh,Tpx,topOver,botUnder,sideY1,
+         topX,topW_px,topPanelY,botX,botW_px,botPanelY} = p;
+  if (Tpx < 3) return;
+  ctx.save();
+
+  const OV = 'rgba(220,50,50,';   // 올라탐/아래형: 빨강
+  const BT = 'rgba(22,163,74,';   // 끼움형: 초록
+  const dashL = Math.max(4, Tpx * 0.48);
+  const dashG = Math.max(2, Tpx * 0.28);
+  const sW = Math.max(1.8, Tpx * 0.13);
+  ctx.lineWidth = sW;
+
+  function seamH(x1,y,x2,col){
+    ctx.strokeStyle = col+'0.88)';
+    ctx.setLineDash([dashL, dashG]);
+    ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  function seamV(x,y1,y2,col){
+    ctx.strokeStyle = col+'0.88)';
+    ctx.setLineDash([dashL, dashG]);
+    ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  function cornerFill(x,y,w,h,col){
+    ctx.fillStyle = col+'0.20)'; ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle = col+'0.60)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x,y,w,h); ctx.lineWidth = sW;
+  }
+
+  // ── 상판 접합 ──────────────────────────────────
+  if (topOver) {
+    // 올라탐형: 상판이 측판 위에 얹힘 → 코너 강조 + 측판 시작선(수평)
+    cornerFill(ox,           oy, Tpx, Tpx, OV);
+    cornerFill(ox+fw-Tpx,   oy, Tpx, Tpx, OV);
+    seamH(ox,         sideY1, ox+Tpx,      OV);   // 좌 측판 상단 seam
+    seamH(ox+fw-Tpx, sideY1, ox+fw,        OV);   // 우 측판 상단 seam
+  } else {
+    // 끼움형: 상판 끝이 측판 내면에 맞닿음 → 수직 seam
+    seamV(topX,           topPanelY, topPanelY+Tpx, BT);
+    seamV(topX+topW_px,   topPanelY, topPanelY+Tpx, BT);
+  }
+
+  // ── 지판 접합 ──────────────────────────────────
+  if (botUnder) {
+    // 아래형: 지판이 측판 아래 → 코너 강조 + 측판 하단선(수평)
+    cornerFill(ox,         oy+fh-Tpx, Tpx, Tpx, OV);
+    cornerFill(ox+fw-Tpx, oy+fh-Tpx, Tpx, Tpx, OV);
+    seamH(ox,        oy+fh-Tpx, ox+Tpx,    OV);
+    seamH(ox+fw-Tpx, oy+fh-Tpx, ox+fw,     OV);
+  } else {
+    // 끼움형: 지판 끝 수직 seam
+    seamV(botX,          botPanelY, botPanelY+Tpx, BT);
+    seamV(botX+botW_px,  botPanelY, botPanelY+Tpx, BT);
+  }
+
+  ctx.restore();
 }
 
 let rTimer;
