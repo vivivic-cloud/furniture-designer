@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.7.0</span>
+    <span class="version-badge">v2.8.0</span>
   </div>
 
   <div class="main">
@@ -804,7 +804,8 @@ function renderColConfigs() {
 
 function step3joint(el) {
   const jc = (pos, val, cur, label, sub) =>
-    `<button class="joint-card ${cur===val?'sel':''}" onclick="S.${pos}Joint='${val}';render()">
+    `<button class="joint-card ${cur===val?'sel':''}" data-jpos="${pos}" data-jval="${val}"
+       onclick="setJoint('${pos}','${val}')">
        ${svgJointIcon(pos, val)}
        <div class="jc-label">${label}</div>
        <div class="jc-sub">${sub}</div>
@@ -830,7 +831,7 @@ function step3joint(el) {
       </div>
     </div>
 
-    <div class="joint-summary">${jointSummary()}</div>`;
+    <div class="joint-summary" id="jointSummaryEl">${jointSummary()}</div>`;
 }
 
 function svgJointIcon(pos, type) {
@@ -880,13 +881,24 @@ function svgJointIcon(pos, type) {
 }
 
 function jointSummary() {
-  const {w:W, h:H, T, topJoint, bottomJoint} = S;
+  const {w:W, h:H, d:D, T, topJoint, bottomJoint} = S;
   const sideH = H - (topJoint==='over'?T:0) - (bottomJoint==='under'?T:0);
   const topW  = topJoint==='over'    ? W : W-2*T;
   const botW  = bottomJoint==='under'? W : W-2*T;
-  return `<b>측판</b> 높이: ${sideH}mm &nbsp;|&nbsp;
-          <b>상판</b> 폭: ${topW}mm &nbsp;|&nbsp;
-          <b>지판</b> 폭: ${botW}mm`;
+  return `<b>측판</b> ${D}×${sideH} T${T} &nbsp;|&nbsp;
+          <b>상판</b> ${topW}×${D} T${T} &nbsp;|&nbsp;
+          <b>지판</b> ${botW}×${D} T${T}`;
+}
+function setJoint(pos, val) {
+  S[pos+'Joint'] = val;
+  // 카드 선택 상태만 업데이트 (전체 render 불필요)
+  document.querySelectorAll(`.joint-card[data-jpos="${pos}"]`).forEach(btn => {
+    btn.classList.toggle('sel', btn.dataset.jval === val);
+  });
+  const jsEl = document.getElementById('jointSummaryEl');
+  if(jsEl) jsEl.innerHTML = jointSummary();
+  draw();
+  if(document.getElementById('paneParts').classList.contains('active')) renderParts();
 }
 
 function step4(el) {
@@ -1408,6 +1420,10 @@ function draw() {
     ctx.restore();
   }
 
+  // ── 부속별 사이즈 레이블 ─────────────────────────────
+  drawPartSizeLabels(ctx,{ox,oy,fw,fh,sc,Tpx,topX,topW_px,topPanelY,botX,botW_px,botPanelY,
+    sideY1,sideHpx,cy1,cy2,colBounds,iH,innerD:(S.backJoint==='dado'?S.d-S.dadoPos-S.dadoW:S.d-S.backT)});
+
   // ── 문 ───────────────────────────────────────────
   if(S.hasDoor){
     const ins=Math.max(5,12*sc);
@@ -1497,6 +1513,85 @@ function draw() {
 }
 
 function L(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+
+// 각 부속 치수 레이블을 캔버스에 표기
+function drawPartSizeLabels(ctx,p){
+  const {ox,oy,fw,fh,sc,Tpx,topX,topW_px,topPanelY,botX,botW_px,botPanelY,
+         sideY1,sideHpx,cy1,cy2,colBounds,iH,innerD}=p;
+  const fs=Math.max(7,Math.min(11,Math.round(sc*7.5)));
+  const bg='rgba(255,255,255,0.82)', fg='rgba(30,40,70,0.80)', fg2='rgba(50,80,160,0.75)';
+
+  function chip(cx,cy,text,rot=false){
+    ctx.save();
+    ctx.font=`bold ${fs}px 'Malgun Gothic',sans-serif`;
+    const tw=ctx.measureText(text).width;
+    const pw=tw+6, ph=fs+4;
+    if(rot){ ctx.translate(cx,cy); ctx.rotate(-Math.PI/2); }
+    else { ctx.translate(cx,cy); }
+    ctx.fillStyle=bg;
+    ctx.beginPath();
+    ctx.roundRect?ctx.roundRect(-pw/2,-ph/2,pw,ph,3):ctx.fillRect(-pw/2,-ph/2,pw,ph);
+    ctx.fill();
+    ctx.fillStyle=fg;
+    ctx.textAlign='center';
+    ctx.fillText(text,0,fs*0.35);
+    ctx.restore();
+  }
+
+  const {w:W,h:H,d:D,T,topJoint,bottomJoint}=S;
+  const topOver=topJoint==='over', botUnder=bottomJoint==='under';
+  const sideH=Math.round(sideHpx/sc);
+  const topW=Math.round(topW_px/sc);
+  const botW=Math.round(botW_px/sc);
+  const topDv=D+(S.topDepthOffset||0);
+  const botDv=D+(S.botDepthOffset||0);
+
+  // 상판
+  if(Tpx>=6){
+    const cx=topX+topW_px/2, cy=topPanelY+Tpx/2;
+    chip(cx,cy,`${topW}×${topDv}`, Tpx<14);
+  }
+  // 지판
+  if(Tpx>=6){
+    const cx=botX+botW_px/2, cy=botPanelY+Tpx/2;
+    chip(cx,cy,`${botW}×${botDv}`, Tpx<14);
+  }
+  // 측판 (좌측)
+  if(Tpx>=6){
+    chip(ox+Tpx/2, sideY1+sideHpx/2, `${D}×${sideH}`, true);
+  }
+  // 수직 칸막이
+  const innerXstart2=ox+Tpx, innerWpx2=fw-2*Tpx;
+  const divCenters2=(S.vDivPos||[]).map(f=>innerXstart2+f*innerWpx2);
+  for(let i=0;i<S.vCols-1;i++){
+    const dx=divCenters2[i];
+    const dvOff=(S.vDivDepthOffsets||[])[i]||0;
+    const dvD=Math.round(innerD+dvOff);
+    if(Tpx>=6) chip(dx,cy1+iH/2,`${dvD}×${Math.round(iH/sc)}`,true);
+  }
+  // 선반 (각 칸, 각 선반에 유효깊이)
+  ctx.save();
+  ctx.font=`${Math.max(7,Math.min(9,fs-1))}px 'Malgun Gothic',sans-serif`;
+  ctx.fillStyle=fg2; ctx.textAlign='left';
+  for(let ci=0;ci<S.vCols;ci++){
+    const c=S.cols[ci];
+    if(!c.shelfPos||c.shelfPos.length===0) continue;
+    const {cx1,cx2}=colBounds[ci];
+    const colH=c.type==='mixed'?iH*0.55:iH;
+    for(let si=0;si<c.shelfPos.length;si++){
+      const off=(c.shelfDepthOffsets&&c.shelfDepthOffsets[si])||0;
+      const d=Math.round(innerD+off);
+      const sy=cy1+c.shelfPos[si]*colH;
+      if(off!==0){
+        // 단차 있는 선반만 표기 (없으면 선반 폭 레이블로 충분)
+        ctx.fillStyle='rgba(99,102,241,0.8)';
+        ctx.fillText(`D:${d}`,cx2+3,sy+Math.max(4,fs*0.4));
+      }
+    }
+  }
+  ctx.restore();
+}
+
 // positions: 선반 중심 비율 배열, selIdx: 선택 인덱스, shelfTypes: 배열 또는 'fixed'|'adj'
 function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfTypes){
   for(let i=0;i<positions.length;i++){
