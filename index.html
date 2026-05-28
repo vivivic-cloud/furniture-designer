@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.12.0</span>
+    <span class="version-badge">v2.13.0</span>
   </div>
 
   <div class="main">
@@ -1301,35 +1301,31 @@ function draw() {
     const st = partState(type, sub);
     ctx.fillStyle = st ? st.fill : baseCol;
     ctx.fillRect(x, y, w, h);
-    // 나뭇결 텍스처: 수평 패널(상/지판)은 'h', 수직 패널(측판)은 'v'
-    if(!st && Tpx>=7) drawGrain(ctx, x, y, w, h, type==='sidePanel'?'v':'h', sc);
     if(st && st.shadow){
       ctx.save();
       ctx.shadowColor='rgba(67,97,238,0.35)'; ctx.shadowBlur=8;
-      ctx.strokeStyle=st.stroke; ctx.lineWidth=st.lw; ctx.strokeRect(x,y,w,h);
+      ctx.strokeStyle=st.stroke; ctx.lineWidth=2.5; ctx.strokeRect(x,y,w,h);
       ctx.restore();
     } else {
-      ctx.strokeStyle = st ? st.stroke : '#5a5a6a';
-      ctx.lineWidth   = st ? st.lw    : 1.2;
+      ctx.strokeStyle = st ? st.stroke : '#333';
+      ctx.lineWidth   = st ? st.lw    : 1.5;
       ctx.strokeRect(x, y, w, h);
     }
   }
 
-  // ── 상판 (올라탐형일 때 앰버 계열로 차별화) ─────────────
-  const topBaseCol = topOver  ? '#c09040' : '#e0d8c0';
-  const botBaseCol = botUnder ? '#c09040' : '#e0d8c0';
-  drawPanel(topX, topPanelY, topW_px, Tpx, topBaseCol, 'topPanel');
+  // ── 상판 ────────────────────────────────────────────
+  drawPanel(topX, topPanelY, topW_px, Tpx, '#e8dfc8', 'topPanel');
   if(topOffPx > 4)
     drawSpaceDims(ctx, topX, oy, topW_px, topOffPx, [], Tpx, sc);
 
   // ── 지판(하판) ──────────────────────────────────────
-  drawPanel(botX, botPanelY, botW_px, Tpx, botBaseCol, 'botPanel');
+  drawPanel(botX, botPanelY, botW_px, Tpx, '#e8dfc8', 'botPanel');
   if(botOffPx > 4)
     drawSpaceDims(ctx, botX, oy+fh-botOffPx, botW_px, botOffPx, [], Tpx, sc);
 
   // ── 측판 좌/우 ──────────────────────────────────────
-  drawPanel(ox,        sideY1, Tpx, sideHpx, '#c8cad8', 'sidePanel', 'left');
-  drawPanel(ox+fw-Tpx, sideY1, Tpx, sideHpx, '#c8cad8', 'sidePanel', 'right');
+  drawPanel(ox,        sideY1, Tpx, sideHpx, '#d0d4e0', 'sidePanel', 'left');
+  drawPanel(ox+fw-Tpx, sideY1, Tpx, sideHpx, '#d0d4e0', 'sidePanel', 'right');
 
   // ── 수직 칸막이 (vDivPos 기반 위치, 고정/이동형 구분) ──
   for(let i=0;i<S.vCols-1;i++){
@@ -1340,14 +1336,13 @@ function draw() {
     const baseDiv = isDivAdj ? '#bde0f8' : '#d4d4d0';
     ctx.fillStyle = isSelDiv?'#bfdbfe': isHovDiv?'#dbeafe': baseDiv;
     ctx.fillRect(dx, cy1, Tpx, iH);
-    if(!isSelDiv&&!isHovDiv&&Tpx>=7) drawGrain(ctx,dx,cy1,Tpx,iH,'v',sc);
     if(isSelDiv){
       ctx.save(); ctx.shadowColor='rgba(67,97,238,0.35)'; ctx.shadowBlur=8;
       ctx.strokeStyle='#4361ee'; ctx.lineWidth=2.5; ctx.strokeRect(dx,cy1,Tpx,iH);
       ctx.restore();
     } else {
-      ctx.strokeStyle=isHovDiv?'#3b62ee':isDivAdj?'#0ea5e9':'#5a5a6a';
-      ctx.lineWidth=isHovDiv?2:isDivAdj?1.2:1.2;
+      ctx.strokeStyle=isHovDiv?'#3b62ee':isDivAdj?'#0ea5e9':'#333';
+      ctx.lineWidth=isHovDiv?2:1.5;
       ctx.strokeRect(dx, cy1, Tpx, iH);
     }
     // 이동형 칸막이: 핀홀 점 표시
@@ -1379,8 +1374,7 @@ function draw() {
       const splitY=cy1+iH*0.55;
       ctx.fillStyle='#d4d4d0';
       ctx.fillRect(cx1,splitY,iW,Tpx);
-      if(Tpx>=7) drawGrain(ctx,cx1,splitY,iW,Tpx,'h',sc);
-      ctx.strokeStyle='#5a5a6a'; ctx.lineWidth=1.2;
+      ctx.strokeStyle='#333'; ctx.lineWidth=1.5;
       ctx.strokeRect(cx1,splitY,iW,Tpx);
       const topH=splitY-cy1;
       const positions=c.shelfPos||[];
@@ -1479,10 +1473,6 @@ function draw() {
     }
   }
 
-  // ── 샌드방향 접합부 시각화 (모든 내용 위에 표시) ──────────
-  drawJointSeams(ctx, {ox,oy,fw,fh,sc,Tpx,topOver,botUnder,sideY1,
-    topX,topW_px,topPanelY,botX,botW_px,botPanelY});
-
   // ── 외부 치수선 ─────────────────────────────────────
   dimH(ctx,ox,oy+fh+28,fw,`${S.w}mm`,'#4361ee');
   dimV(ctx,ox+fw+28,oy,fh,`${S.h}mm`,'#4361ee');
@@ -1544,78 +1534,78 @@ function draw() {
 
 function L(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
 
-// 각 부속 치수 레이블을 캔버스에 표기
+// 각 부속 치수 레이블을 캔버스에 표기 (샌드방향 반영 실시간 갱신)
 function drawPartSizeLabels(ctx,p){
-  const {ox,oy,fw,fh,sc,Tpx,topX,topW_px,topPanelY,botX,botW_px,botPanelY,
+  const {ox,oy,fw,fh,sc,Tpx,
+         topX,topW_px,topPanelY,
+         botX,botW_px,botPanelY,
          sideY1,sideHpx,cy1,cy2,colBounds,iH,innerD}=p;
-  const fs=Math.max(7,Math.min(11,Math.round(sc*7.5)));
-  const bg='rgba(255,255,255,0.82)', fg='rgba(30,40,70,0.80)', fg2='rgba(50,80,160,0.75)';
+  if(sc<0.10) return;
 
-  function chip(cx,cy,text,rot=false){
+  const {d:D,T,topJoint,bottomJoint}=S;
+  const topW =Math.round(topW_px/sc);
+  const botW =Math.round(botW_px/sc);
+  const sideH=Math.round(sideHpx/sc);
+  const topDv=D+(S.topDepthOffset||0);
+  const botDv=D+(S.botDepthOffset||0);
+  const fs=Math.max(9,Math.min(13,Math.round(sc*9)));
+
+  // 부속 위에 [이름 / 치수] 라벨 칩 (흰 배경 + 얇은 테두리)
+  function chip(cx,cy,name,dim,rot){
     ctx.save();
+    if(rot){ctx.translate(cx,cy);ctx.rotate(-Math.PI/2);}
+    else ctx.translate(cx,cy);
+    const nameFs=Math.max(7,fs-2);
+    ctx.font=`${nameFs}px 'Malgun Gothic',sans-serif`;
+    const nw=ctx.measureText(name).width;
     ctx.font=`bold ${fs}px 'Malgun Gothic',sans-serif`;
-    const tw=ctx.measureText(text).width;
-    const pw=tw+6, ph=fs+4;
-    if(rot){ ctx.translate(cx,cy); ctx.rotate(-Math.PI/2); }
-    else { ctx.translate(cx,cy); }
-    ctx.fillStyle=bg;
+    const dw=ctx.measureText(dim).width;
+    const pw=Math.max(nw,dw)+10, ph=nameFs+fs+8;
+    ctx.fillStyle='rgba(255,255,255,0.93)';
+    ctx.strokeStyle='rgba(0,0,0,0.14)'; ctx.lineWidth=0.8;
     ctx.beginPath();
-    ctx.roundRect?ctx.roundRect(-pw/2,-ph/2,pw,ph,3):ctx.fillRect(-pw/2,-ph/2,pw,ph);
-    ctx.fill();
-    ctx.fillStyle=fg;
+    if(ctx.roundRect)ctx.roundRect(-pw/2,-ph/2,pw,ph,4);
+    else ctx.rect(-pw/2,-ph/2,pw,ph);
+    ctx.fill();ctx.stroke();
     ctx.textAlign='center';
-    ctx.fillText(text,0,fs*0.35);
+    ctx.fillStyle='#777';
+    ctx.font=`${nameFs}px 'Malgun Gothic',sans-serif`;
+    ctx.fillText(name,0,-ph/2+nameFs+1);
+    ctx.fillStyle='#111';
+    ctx.font=`bold ${fs}px 'Malgun Gothic',sans-serif`;
+    ctx.fillText(dim,0,ph/2-4);
     ctx.restore();
   }
 
-  const {w:W,h:H,d:D,T,topJoint,bottomJoint}=S;
-  const topOver=topJoint==='over', botUnder=bottomJoint==='under';
-  const sideH=Math.round(sideHpx/sc);
-  const topW=Math.round(topW_px/sc);
-  const botW=Math.round(botW_px/sc);
-  const topDv=D+(S.topDepthOffset||0);
-  const botDv=D+(S.botDepthOffset||0);
-
-  // 상판
-  if(Tpx>=6){
-    const cx=topX+topW_px/2, cy=topPanelY+Tpx/2;
-    chip(cx,cy,`${topW}×${topDv}`, Tpx<14);
-  }
-  // 지판
-  if(Tpx>=6){
-    const cx=botX+botW_px/2, cy=botPanelY+Tpx/2;
-    chip(cx,cy,`${botW}×${botDv}`, Tpx<14);
-  }
-  // 측판 (좌측)
-  if(Tpx>=6){
-    chip(ox+Tpx/2, sideY1+sideHpx/2, `${D}×${sideH}`, true);
-  }
+  // 상판 (topW 값이 샌드방향에 따라 변함)
+  if(Tpx>=6) chip(topX+topW_px/2, topPanelY+Tpx/2, '상판', `${topW}×${topDv}`, Tpx<14);
+  // 지판 (botW 값이 샌드방향에 따라 변함)
+  if(Tpx>=6) chip(botX+botW_px/2, botPanelY+Tpx/2, '지판', `${botW}×${botDv}`, Tpx<14);
+  // 측판 좌 (sideH 값이 샌드방향에 따라 변함)
+  if(Tpx>=5) chip(ox+Tpx/2, sideY1+sideHpx/2, '측판', `${D}×${sideH}`, true);
   // 수직 칸막이
-  const innerXstart2=ox+Tpx, innerWpx2=fw-2*Tpx;
-  const divCenters2=(S.vDivPos||[]).map(f=>innerXstart2+f*innerWpx2);
+  const innerXs=ox+Tpx, innerWp=fw-2*Tpx;
+  const dcs=(S.vDivPos||[]).map(f=>innerXs+f*innerWp);
   for(let i=0;i<S.vCols-1;i++){
-    const dx=divCenters2[i];
     const dvOff=(S.vDivDepthOffsets||[])[i]||0;
     const dvD=Math.round(innerD+dvOff);
-    if(Tpx>=6) chip(dx,cy1+iH/2,`${dvD}×${Math.round(iH/sc)}`,true);
+    chip(dcs[i],cy1+iH/2,'칸막이',`${dvD}×${Math.round(iH/sc)}`,true);
   }
-  // 선반 (각 칸, 각 선반에 유효깊이)
+  // 선반: 단차 있는 것만 표기
   ctx.save();
-  ctx.font=`${Math.max(7,Math.min(9,fs-1))}px 'Malgun Gothic',sans-serif`;
-  ctx.fillStyle=fg2; ctx.textAlign='left';
+  ctx.font=`bold ${Math.max(7,fs-2)}px 'Malgun Gothic',sans-serif`;
+  ctx.fillStyle='rgba(99,102,241,0.88)'; ctx.textAlign='right';
   for(let ci=0;ci<S.vCols;ci++){
     const c=S.cols[ci];
-    if(!c.shelfPos||c.shelfPos.length===0) continue;
+    if(!c.shelfPos||!c.shelfPos.length) continue;
     const {cx1,cx2}=colBounds[ci];
-    const colH=c.type==='mixed'?iH*0.55:iH;
+    const cH=c.type==='mixed'?iH*0.55:iH;
     for(let si=0;si<c.shelfPos.length;si++){
       const off=(c.shelfDepthOffsets&&c.shelfDepthOffsets[si])||0;
-      const d=Math.round(innerD+off);
-      const sy=cy1+c.shelfPos[si]*colH;
       if(off!==0){
-        // 단차 있는 선반만 표기 (없으면 선반 폭 레이블로 충분)
-        ctx.fillStyle='rgba(99,102,241,0.8)';
-        ctx.fillText(`D:${d}`,cx2+3,sy+Math.max(4,fs*0.4));
+        const d=Math.round(innerD+off);
+        const sy=cy1+c.shelfPos[si]*cH;
+        ctx.fillText(`D${d}`,cx2-2,sy+Math.max(3,Tpx*0.35));
       }
     }
   }
@@ -1634,14 +1624,13 @@ function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfTypes,ci){
     const baseCol = isAdj ? '#bde0f8' : '#d5d5d5';
     ctx.fillStyle = isSel?'#bfdbfe': isHov?'#dbeafe': baseCol;
     ctx.fillRect(x+1,sy,w-2,Tpx);
-    if(!isSel&&!isHov&&Tpx>=7) drawGrain(ctx,x+1,sy,w-2,Tpx,'h',sc);
     if(isSel){
       ctx.save(); ctx.shadowColor='rgba(67,97,238,0.35)'; ctx.shadowBlur=8;
       ctx.strokeStyle='#4361ee'; ctx.lineWidth=2.5; ctx.strokeRect(x+1,sy,w-2,Tpx);
       ctx.restore();
     } else {
-      ctx.strokeStyle=isHov?'#3b62ee':isAdj?'#0ea5e9':'#5a5a6a';
-      ctx.lineWidth=isHov?2:isAdj?1.2:1.2;
+      ctx.strokeStyle=isHov?'#3b62ee':isAdj?'#0ea5e9':'#333';
+      ctx.lineWidth=isHov?2:1.5;
       ctx.strokeRect(x+1,sy,w-2,Tpx);
     }
     // 이동형: 선반핀 홀 점 표시
@@ -1747,114 +1736,6 @@ function dimV(ctx,x,y,len,lbl,col){
   tri(ctx,x,y,5,'d');tri(ctx,x,y+len,5,'u');
   ctx.save();ctx.translate(x+14,(y+y+len)/2);ctx.rotate(-Math.PI/2);
   ctx.font=`bold 11px 'Malgun Gothic',sans-serif`;ctx.textAlign='center';ctx.fillText(lbl,0,0);ctx.restore();
-}
-
-// ── 샌드방향 접합부 시각화 ─────────────────────────────
-// 올라탐형(over/under): 빨간 코너 하이라이트 + 수평 seam 점선
-// 끼움형(between):     초록 수직 seam 점선 (패널 끝이 측판 내면에 맞닿음)
-// ── 목재 나뭇결 텍스처 ───────────────────────────────
-// dir='h': 수평결 (상판/지판/선반), 'v': 수직결 (측판/칸막이)
-function drawGrain(ctx, x, y, w, h, dir, sc) {
-  if(w<5||h<5) return;
-  const sp=Math.max(5,Math.round(9*sc));
-  ctx.save();
-  ctx.strokeStyle='rgba(80,58,28,0.11)';
-  ctx.lineWidth=0.7;
-  ctx.beginPath();
-  if(dir==='h'){
-    for(let ly=y+sp;ly<y+h-1;ly+=sp){ctx.moveTo(x+2,ly);ctx.lineTo(x+w-2,ly);}
-  } else {
-    for(let lx=x+sp;lx<x+w-1;lx+=sp){ctx.moveTo(lx,y+2);ctx.lineTo(lx,y+h-2);}
-  }
-  ctx.stroke();
-  ctx.restore();
-}
-
-// ── 접합부 텍스트 배지 ──────────────────────────────────
-function jLabel(ctx, cx, cy, text, col, fs) {
-  ctx.save();
-  const f=Math.max(11,fs);
-  ctx.font=`bold ${f}px 'Malgun Gothic',sans-serif`;
-  const tw=ctx.measureText(text).width;
-  const pw=tw+14, ph=f+8;
-  ctx.fillStyle=col;
-  ctx.beginPath();
-  if(ctx.roundRect) ctx.roundRect(cx-pw/2,cy-ph/2,pw,ph,5);
-  else ctx.rect(cx-pw/2,cy-ph/2,pw,ph);
-  ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=1;
-  ctx.beginPath();
-  if(ctx.roundRect) ctx.roundRect(cx-pw/2,cy-ph/2,pw,ph,5);
-  else ctx.rect(cx-pw/2,cy-ph/2,pw,ph);
-  ctx.stroke();
-  ctx.fillStyle='white'; ctx.textAlign='center';
-  ctx.fillText(text, cx, cy+f*0.37);
-  ctx.restore();
-}
-
-// ── 샌드방향 접합부 시각화 ─────────────────────────────
-// • 올라탐형/아래형: 굵은 주황-빨강 수평선 (전체 너비) + 텍스트 배지
-// • 끼움형:         굵은 초록 수직선 쌍 (전체 높이) + 텍스트 배지
-function drawJointSeams(ctx, p) {
-  const {ox,oy,fw,fh,sc,Tpx,topOver,botUnder,sideY1,
-         topX,topW_px,topPanelY,botX,botW_px,botPanelY} = p;
-  ctx.save();
-
-  const OV='#c84400';   // 올라탐/아래형 – 주황-빨강
-  const BT='#0a7a50';   // 끼움형       – 딥 그린
-  const ext=16;          // 가구 외곽 바깥 연장 (px)
-  const sW=Math.max(3.5, Tpx*0.28);  // seam 선 두께
-  const tk=Math.max(6,  sW*2);        // 끝 틱마크 크기
-  const fs=Math.max(11, Math.round(sc*11));
-
-  // 수평 seam (올라탐형): 전체 너비
-  function hSeam(y, col, lbl) {
-    ctx.save();
-    ctx.strokeStyle=col; ctx.lineWidth=sW; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(ox-ext,y); ctx.lineTo(ox+fw+ext,y); ctx.stroke();
-    // 양 끝 틱마크
-    [ox-ext, ox+fw+ext].forEach(tx=>{
-      ctx.beginPath(); ctx.moveTo(tx,y-tk); ctx.lineTo(tx,y+tk); ctx.stroke();
-    });
-    ctx.restore();
-    jLabel(ctx, ox+fw/2, y, lbl, col, fs);
-  }
-
-  // 수직 seam 쌍 (끼움형): 패널 전체 높이 + 위아래 연장
-  function vPair(x1,x2,y1,y2,col,lbl) {
-    // 세로 선은 상/하 패널 두께만큼만 (시각적 노이즈 최소화)
-    const extV=Math.max(ext, Tpx*2);
-    ctx.save();
-    ctx.strokeStyle=col; ctx.lineWidth=sW; ctx.setLineDash([]);
-    [x1,x2].forEach(sx=>{
-      ctx.beginPath(); ctx.moveTo(sx,y1-extV); ctx.lineTo(sx,y2+extV); ctx.stroke();
-    });
-    // 끝 틱마크
-    [x1,x2].forEach(sx=>{
-      [y1-extV,y2+extV].forEach(sy=>{
-        ctx.beginPath(); ctx.moveTo(sx-tk,sy); ctx.lineTo(sx+tk,sy); ctx.stroke();
-      });
-    });
-    ctx.restore();
-    // 배지는 두 수직선 사이 중앙, 패널 중심 y
-    jLabel(ctx, (x1+x2)/2, (y1+y2)/2, lbl, col, fs);
-  }
-
-  // ── 상판 접합 ──────────────────────────────────────
-  if(topOver){
-    hSeam(sideY1,            OV, '상판 올라탐 ↑');
-  } else {
-    vPair(topX, topX+topW_px, topPanelY, topPanelY+Tpx, BT, '상판 끼움 ↔');
-  }
-
-  // ── 지판 접합 ──────────────────────────────────────
-  if(botUnder){
-    hSeam(oy+fh-Tpx,         OV, '지판 아래형 ↓');
-  } else {
-    vPair(botX, botX+botW_px, botPanelY, botPanelY+Tpx, BT, '지판 끼움 ↔');
-  }
-
-  ctx.restore();
 }
 
 let rTimer;
