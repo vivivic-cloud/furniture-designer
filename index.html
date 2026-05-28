@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.13.0</span>
+    <span class="version-badge">v2.14.0</span>
   </div>
 
   <div class="main">
@@ -1293,24 +1293,17 @@ function draw() {
   function partState(type, sub) {
     const isSel = _sel   && _sel.type===type   && (_sel.side===sub  || sub==null);
     const isHov = _hover && _hover.type===type && (_hover.side===sub || sub==null);
-    if (isSel) return {fill:'#bfdbfe', stroke:'#4361ee', lw:2.5, shadow:true};
-    if (isHov) return {fill:'#dbeafe', stroke:'#3b62ee', lw:2,   shadow:false};
+    if (isSel) return {fill:'#bfdbfe', stroke:'#4361ee', lw:1.5, shadow:false};
+    if (isHov) return {fill:'#dbeafe', stroke:'#3b62ee', lw:1.5, shadow:false};
     return null;
   }
   function drawPanel(x, y, w, h, baseCol, type, sub) {
     const st = partState(type, sub);
     ctx.fillStyle = st ? st.fill : baseCol;
     ctx.fillRect(x, y, w, h);
-    if(st && st.shadow){
-      ctx.save();
-      ctx.shadowColor='rgba(67,97,238,0.35)'; ctx.shadowBlur=8;
-      ctx.strokeStyle=st.stroke; ctx.lineWidth=2.5; ctx.strokeRect(x,y,w,h);
-      ctx.restore();
-    } else {
-      ctx.strokeStyle = st ? st.stroke : '#333';
-      ctx.lineWidth   = st ? st.lw    : 1.5;
-      ctx.strokeRect(x, y, w, h);
-    }
+    ctx.strokeStyle = st ? st.stroke : '#333';
+    ctx.lineWidth   = 1.5;
+    ctx.strokeRect(x, y, w, h);
   }
 
   // ── 상판 ────────────────────────────────────────────
@@ -1336,15 +1329,9 @@ function draw() {
     const baseDiv = isDivAdj ? '#bde0f8' : '#d4d4d0';
     ctx.fillStyle = isSelDiv?'#bfdbfe': isHovDiv?'#dbeafe': baseDiv;
     ctx.fillRect(dx, cy1, Tpx, iH);
-    if(isSelDiv){
-      ctx.save(); ctx.shadowColor='rgba(67,97,238,0.35)'; ctx.shadowBlur=8;
-      ctx.strokeStyle='#4361ee'; ctx.lineWidth=2.5; ctx.strokeRect(dx,cy1,Tpx,iH);
-      ctx.restore();
-    } else {
-      ctx.strokeStyle=isHovDiv?'#3b62ee':isDivAdj?'#0ea5e9':'#333';
-      ctx.lineWidth=isHovDiv?2:1.5;
-      ctx.strokeRect(dx, cy1, Tpx, iH);
-    }
+    ctx.strokeStyle=isSelDiv?'#4361ee':isHovDiv?'#3b62ee':isDivAdj?'#0ea5e9':'#333';
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(dx, cy1, Tpx, iH);
     // 이동형 칸막이: 핀홀 점 표시
     if(isDivAdj&&Tpx>4){
       const dotR=Math.max(1,Math.min(2.5,Tpx*0.18));
@@ -1385,7 +1372,7 @@ function draw() {
   }
 
   // ── 외곽 윤곽선 ─────────────────────────────────────
-  ctx.strokeStyle='#111'; ctx.lineWidth=2.5; ctx.strokeRect(ox,oy,fw,fh);
+  ctx.strokeStyle='#333'; ctx.lineWidth=1.5; ctx.strokeRect(ox,oy,fw,fh);
 
   // ── 두께 치수 표기 ────────────────────────────────
   if(Tpx>6){
@@ -1452,7 +1439,7 @@ function draw() {
         const dx=ci===0?ox:divCenters[ci-1];
         const dr=ci===S.vCols-1?ox+fw:divCenters[ci];
         const dw=dr-dx, isL=ci<S.vCols/2;
-        ctx.strokeStyle='#000'; ctx.lineWidth=2.2; ctx.strokeRect(dx,oy,dw,fh);
+        ctx.strokeStyle='#333'; ctx.lineWidth=1.5; ctx.strokeRect(dx,oy,dw,fh);
         ctx.strokeStyle='#444'; ctx.lineWidth=1;   ctx.strokeRect(dx+ins,oy+ins,dw-ins*2,fh-ins*2);
         const hx=isL?dx+4:dx+dw-4; ctx.fillStyle='#666';
         for(const hy of[oy+Math.min(70*sc,fh*0.1),oy+fh-Math.min(70*sc,fh*0.1)]){
@@ -1462,10 +1449,10 @@ function draw() {
       }
     } else {
       const pW=fw*0.55;
-      ctx.strokeStyle='#000';ctx.lineWidth=2.2;
-      ctx.strokeRect(ox,oy,pW,fh); ctx.strokeStyle='#444';ctx.lineWidth=1; ctx.strokeRect(ox+ins,oy+ins,pW-ins*2,fh-ins*2);
-      ctx.strokeStyle='#000';ctx.lineWidth=2.2;
-      ctx.strokeRect(ox+fw-pW,oy,pW,fh); ctx.strokeStyle='#444';ctx.lineWidth=1; ctx.strokeRect(ox+fw-pW+ins,oy+ins,pW-ins*2,fh-ins*2);
+      ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+      ctx.strokeRect(ox,oy,pW,fh); ctx.strokeStyle='#555';ctx.lineWidth=1; ctx.strokeRect(ox+ins,oy+ins,pW-ins*2,fh-ins*2);
+      ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+      ctx.strokeRect(ox+fw-pW,oy,pW,fh); ctx.strokeStyle='#555';ctx.lineWidth=1; ctx.strokeRect(ox+fw-pW+ins,oy+ins,pW-ins*2,fh-ins*2);
       ctx.setLineDash([5,4]);ctx.strokeStyle='#aaa';ctx.lineWidth=1;
       L(ctx,ox+pW,oy,ox+pW,oy+fh);L(ctx,ox+fw-pW,oy,ox+fw-pW,oy+fh);
       ctx.setLineDash([]);
@@ -1624,15 +1611,9 @@ function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfTypes,ci){
     const baseCol = isAdj ? '#bde0f8' : '#d5d5d5';
     ctx.fillStyle = isSel?'#bfdbfe': isHov?'#dbeafe': baseCol;
     ctx.fillRect(x+1,sy,w-2,Tpx);
-    if(isSel){
-      ctx.save(); ctx.shadowColor='rgba(67,97,238,0.35)'; ctx.shadowBlur=8;
-      ctx.strokeStyle='#4361ee'; ctx.lineWidth=2.5; ctx.strokeRect(x+1,sy,w-2,Tpx);
-      ctx.restore();
-    } else {
-      ctx.strokeStyle=isHov?'#3b62ee':isAdj?'#0ea5e9':'#333';
-      ctx.lineWidth=isHov?2:1.5;
-      ctx.strokeRect(x+1,sy,w-2,Tpx);
-    }
+    ctx.strokeStyle=isSel?'#4361ee':isHov?'#3b62ee':isAdj?'#0ea5e9':'#333';
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(x+1,sy,w-2,Tpx);
     // 이동형: 선반핀 홀 점 표시
     if(isAdj&&Tpx>4){
       const dotR=Math.max(1,Math.min(2.5,Tpx*0.18));
@@ -1712,7 +1693,7 @@ function drawDrawers(ctx,x,y,w,h,n,sc){
   }
 }
 function drawHandle(ctx,x,y,sc){
-  ctx.strokeStyle='#222';ctx.fillStyle='#222';ctx.lineWidth=Math.max(1.5,2*sc);
+  ctx.strokeStyle='#222';ctx.fillStyle='#222';ctx.lineWidth=1.5;
   if(S.handle==='bar'){const hl=Math.max(8,20*sc);L(ctx,x,y-hl/2,x,y+hl/2);}
   else if(S.handle==='knob'){ctx.beginPath();ctx.arc(x,y,Math.max(2.5,3.5*sc),0,Math.PI*2);ctx.fill();}
 }
