@@ -11,7 +11,7 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 .app { display: flex; flex-direction: column; height: 100vh; }
 
 .header {
-  background: #1a1a2e; color: white;
+  background: #000; color: white;
   padding: 11px 20px;
   display: flex; align-items: center; gap: 10px;
   flex-shrink: 0;
@@ -29,28 +29,28 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 
 .progress { display: flex; gap: 3px; margin-bottom: 14px; }
 .prog-seg { flex: 1; height: 4px; border-radius: 2px; background: #e8e8e8; transition: background .25s; }
-.prog-seg.done   { background: #2a9d8f; }
-.prog-seg.active { background: #4361ee; }
+.prog-seg.done   { background: #555; }
+.prog-seg.active { background: #000; }
 
 .step-label { font-size: 11px; color: #888; margin-bottom: 3px; }
-.step-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; }
+.step-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 16px; }
 
 .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .type-card { border: 2px solid #e8e8e8; border-radius: 10px; padding: 12px 6px; cursor: pointer; text-align: center; background: white; transition: all .15s; font-family: inherit; }
-.type-card:hover { border-color: #4361ee; background: #f4f6ff; }
-.type-card.sel   { border-color: #4361ee; background: #eef0ff; }
+.type-card:hover { border-color: #333; background: #f5f5f5; }
+.type-card.sel   { border-color: #000; background: #f0f0f0; }
 .type-card .ico  { margin-bottom: 6px; display:flex; align-items:center; justify-content:center; height:38px; }
 .type-card .ico svg { transition: stroke .15s; }
-.type-card.sel .ico svg, .type-card:hover .ico svg { stroke: #4361ee; }
+.type-card.sel .ico svg, .type-card:hover .ico svg { stroke: #000; }
 .type-card .nm   { font-size: 12px; font-weight: 700; }
 .type-card .sub  { font-size: 10px; color: #999; margin-top: 2px; }
 
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; }
 .field-row { display: flex; align-items: center; gap: 8px; }
-.field-row input[type=range] { flex: 1; accent-color: #4361ee; margin-top: 4px; }
+.field-row input[type=range] { flex: 1; accent-color: #111; margin-top: 4px; }
 .field-row input[type=number] { width: 72px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; font-family: inherit; text-align: right; }
-.field-row input:focus { outline: none; border-color: #4361ee; }
+.field-row input:focus { outline: none; border-color: #111; }
 
 /* 샌드방향 아이콘 카드 */
 .joint-section { margin-bottom: 18px; }
@@ -64,13 +64,13 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
   transition: border-color .15s, color .15s, box-shadow .15s;
   color: #555;
 }
-.joint-card:hover { border-color: #a5b4fc; color: #4361ee; box-shadow: 0 2px 8px rgba(67,97,238,.1); }
-.joint-card.sel  { border-color: #4361ee; color: #4361ee; box-shadow: 0 2px 12px rgba(67,97,238,.18); }
+.joint-card:hover { border-color: #aaa; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.joint-card.sel  { border-color: #000; color: #000; box-shadow: 0 2px 12px rgba(0,0,0,.18); }
 .joint-card svg  { display: block; margin: 0 auto 6px; }
 .jc-label { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
 .jc-sub   { font-size: 10px; opacity: .7; }
 .joint-summary {
-  background: #f0f4ff; border-radius: 8px;
+  background: #f5f5f5; border-radius: 8px;
   padding: 9px 12px; font-size: 11px; color: #444; line-height: 1.9;
 }
 
@@ -88,8 +88,8 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 }
 .size-num::-webkit-inner-spin-button,
 .size-num::-webkit-outer-spin-button { -webkit-appearance: none; }
-.size-num:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 3px rgba(67,97,238,.15); }
-.size-num.changed { border-color: #2a9d8f; }
+.size-num:focus { outline: none; border-color: #111; box-shadow: 0 0 0 3px rgba(0,0,0,.12); }
+.size-num.changed { border-color: #555; }
 .step-btn {
   width: 34px; height: 42px; border: 1.5px solid #ddd; border-radius: 8px;
   background: white; font-size: 18px; color: #555; cursor: pointer;
@@ -97,48 +97,48 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.step-btn:hover { background: #eef0ff; border-color: #4361ee; color: #4361ee; }
+.step-btn:hover { background: #f0f0f0; border-color: #333; color: #333; }
 .step-btn:active { transform: scale(.93); }
-.size-slider { width: 100%; accent-color: #4361ee; }
+.size-slider { width: 100%; accent-color: #111; }
 .unit { font-size: 11px; color: #999; }
 
-.size-summary { margin-top: 4px; padding: 7px 10px; background: #f0f8ff; border-radius: 6px; font-size: 11px; color: #555; font-weight: 600; }
+.size-summary { margin-top: 4px; padding: 7px 10px; background: #f5f5f5; border-radius: 6px; font-size: 11px; color: #555; font-weight: 600; }
 
 /* thickness preset cards */
 .thick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
 .thick-card { border: 2px solid #e8e8e8; border-radius: 8px; padding: 8px; cursor: pointer; text-align: center; background: white; transition: all .15s; font-family: inherit; }
-.thick-card:hover { border-color: #4361ee; background: #f4f6ff; }
-.thick-card.sel  { border-color: #4361ee; background: #eef0ff; }
-.thick-card .tv  { font-size: 17px; font-weight: 700; color: #4361ee; }
+.thick-card:hover { border-color: #333; background: #f5f5f5; }
+.thick-card.sel  { border-color: #000; background: #f0f0f0; }
+.thick-card .tv  { font-size: 17px; font-weight: 700; color: #111; }
 .thick-card .tn  { font-size: 10px; color: #888; }
 
 /* back thickness pill buttons */
 .pill-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .pill-btn { padding: 5px 12px; border: 1px solid #ccc; border-radius: 20px; background: white; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; }
-.pill-btn.sel { background: #4361ee; color: white; border-color: #4361ee; }
+.pill-btn.sel { background: #111; color: white; border-color: #111; }
 
 /* 후판 삽입(Dado) 설정 */
-.dado-box { margin-top: 10px; background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px 12px; }
+.dado-box { margin-top: 10px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; }
 .dado-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
-.dado-item { background: white; border: 1px solid #e3e8ff; border-radius: 6px; padding: 8px 8px 6px; }
-.dado-lbl { font-size: 11px; font-weight: 700; color: #4361ee; margin-bottom: 4px; }
+.dado-item { background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 8px 6px; }
+.dado-lbl { font-size: 11px; font-weight: 700; color: #333; margin-bottom: 4px; }
 .dado-row { display: flex; align-items: center; gap: 3px; }
 .dado-num { width: 100%; padding: 5px 6px; border: 1.5px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 700; font-family: inherit; text-align: center; color: #1a1a2e; -moz-appearance: textfield; }
 .dado-num::-webkit-inner-spin-button, .dado-num::-webkit-outer-spin-button { -webkit-appearance: none; }
-.dado-num:focus { outline: none; border-color: #4361ee; box-shadow: 0 0 0 2px rgba(67,97,238,.15); }
+.dado-num:focus { outline: none; border-color: #333; box-shadow: 0 0 0 2px rgba(0,0,0,.12); }
 .dado-hint { font-size: 10px; color: #888; margin-top: 3px; text-align: center; }
-.dado-note { font-size: 11px; color: #4361ee; margin-top: 8px; line-height: 1.7; }
+.dado-note { font-size: 11px; color: #333; margin-top: 8px; line-height: 1.7; }
 
 .nbtn-row { display: flex; gap: 6px; }
 .nbtn { width: 46px; height: 46px; border: 2px solid #e8e8e8; border-radius: 8px; background: white; font-size: 17px; font-weight: 700; cursor: pointer; transition: all .15s; font-family: inherit; }
-.nbtn.sel { border-color: #4361ee; background: #eef0ff; color: #4361ee; }
-.nbtn:hover:not(.sel) { border-color: #4361ee; }
+.nbtn.sel { border-color: #000; background: #f0f0f0; color: #000; }
+.nbtn:hover:not(.sel) { border-color: #333; }
 
-.col-card { background: #f8f9ff; border: 1px solid #e3e8ff; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
-.col-card-title { font-size: 11px; font-weight: 700; color: #4361ee; margin-bottom: 7px; }
+.col-card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.col-card-title { font-size: 11px; font-weight: 700; color: #333; margin-bottom: 7px; }
 .ctype-row { display: flex; gap: 4px; }
 .ctype-btn { flex: 1; padding: 5px 3px; border: 1px solid #ccc; border-radius: 6px; background: white; font-size: 11px; cursor: pointer; font-family: inherit; text-align: center; transition: all .15s; }
-.ctype-btn.sel { background: #4361ee; color: white; border-color: #4361ee; }
+.ctype-btn.sel { background: #000; color: white; border-color: #000; }
 .sub-field { display: flex; gap: 12px; margin-top: 8px; align-items: center; }
 .sub-field label { font-size: 11px; color: #555; }
 .sub-field input[type=number] { width: 44px; padding: 3px 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 12px; font-family: inherit; margin-left: 4px; }
@@ -147,9 +147,9 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 .fxadj-row { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
 .fxadj-lbl { font-size: 11px; color: #666; white-space: nowrap; }
 .fxadj-btn { padding: 3px 10px; border: 1px solid #ccc; border-radius: 14px; background: white; font-size: 11px; cursor: pointer; font-family: inherit; transition: all .13s; }
-.fxadj-btn.sel  { background: #4361ee; color: white; border-color: #4361ee; }
-.fxadj-btn.adj-sel { background: #0ea5e9; color: white; border-color: #0ea5e9; }
-.div-type-section { background: #f8f9ff; border: 1px solid #e3e8ff; border-radius: 8px; padding: 9px 12px; margin-top: 4px; }
+.fxadj-btn.sel  { background: #000; color: white; border-color: #000; }
+.fxadj-btn.adj-sel { background: #333; color: white; border-color: #333; }
+.div-type-section { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 9px 12px; margin-top: 4px; }
 .div-type-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
 .div-type-row:last-child { margin-bottom: 0; }
 /* 이동형 선반: 캔버스 범례 */
@@ -157,15 +157,15 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 
 .toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .tbtn { flex: 1; padding: 9px 6px; border: 2px solid #e8e8e8; border-radius: 8px; background: white; font-size: 13px; cursor: pointer; font-family: inherit; text-align: center; transition: all .15s; }
-.tbtn.sel { border-color: #4361ee; background: #eef0ff; color: #4361ee; font-weight: 600; }
+.tbtn.sel { border-color: #000; background: #f0f0f0; color: #000; font-weight: 600; }
 
-.btn-next { flex: 1; padding: 10px; background: #4361ee; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-next { flex: 1; padding: 10px; background: #111; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .btn-next:disabled { background: #c5c5c5; cursor: default; }
-.btn-prev { padding: 10px 14px; background: white; color: #4361ee; border: 2px solid #4361ee; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+.btn-prev { padding: 10px 14px; background: white; color: #111; border: 2px solid #111; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
 
-.tag { display: inline-block; padding: 2px 8px; background: #eef0ff; color: #4361ee; border-radius: 12px; font-size: 11px; margin: 2px; }
-.result-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 11px 13px; margin-bottom: 12px; }
-.result-title { font-weight: 700; color: #166534; margin-bottom: 5px; font-size: 13px; }
+.tag { display: inline-block; padding: 2px 8px; background: #f0f0f0; color: #333; border-radius: 12px; font-size: 11px; margin: 2px; }
+.result-box { background: #f8f8f8; border: 1px solid #ddd; border-radius: 8px; padding: 11px 13px; margin-bottom: 12px; }
+.result-title { font-weight: 700; color: #111; margin-bottom: 5px; font-size: 13px; }
 .result-row { font-size: 12px; color: #444; line-height: 1.9; }
 
 /* ── Right panel ── */
@@ -173,7 +173,7 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 
 .tabs { display: flex; background: white; border-bottom: 1px solid #ddd; flex-shrink: 0; }
 .tab-btn { padding: 10px 22px; border: none; background: none; font-size: 13px; font-weight: 600; color: #888; cursor: pointer; font-family: inherit; border-bottom: 3px solid transparent; transition: all .15s; }
-.tab-btn.active { color: #4361ee; border-bottom-color: #4361ee; }
+.tab-btn.active { color: #000; border-bottom-color: #000; }
 
 .tab-pane { display: none; flex: 1; overflow: hidden; }
 .tab-pane.active { display: flex; }
@@ -184,26 +184,26 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background: #f
 canvas#cv { background: white; box-shadow: 0 6px 24px rgba(0,0,0,.12); display: block; }
 
 /* parts list tab */
-.parts-wrap { flex: 1; overflow-y: auto; padding: 16px 20px; background: #fafbff; }
+.parts-wrap { flex: 1; overflow-y: auto; padding: 16px 20px; background: #fafafa; }
 .parts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.parts-header h2 { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+.parts-header h2 { font-size: 14px; font-weight: 700; color: #111; }
 
 .assembly-note { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 8px 12px; font-size: 11px; color: #795548; margin-bottom: 12px; line-height: 1.7; }
 
 table.parts { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.parts th { background: #1a1a2e; color: white; padding: 7px 10px; text-align: center; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
 table.parts td { padding: 6px 10px; border-bottom: 1px solid #eee; text-align: center; }
-table.parts tr:hover td { background: #f0f4ff; }
-table.parts .g-shelf  td { color: #166534; }
-table.parts .g-door   td { color: #1d4ed8; }
-table.parts .g-drawer td { color: #7e22ce; }
-table.parts .g-div    td { color: #92400e; }
-table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2px solid #4361ee; }
+table.parts tr:hover td { background: #f5f5f5; }
+table.parts .g-shelf  td { color: #333; }
+table.parts .g-door   td { color: #333; }
+table.parts .g-drawer td { color: #333; }
+table.parts .g-div    td { color: #333; }
+table.parts .g-total  td { background: #f0f0f0; font-weight: 700; border-top: 2px solid #333; }
 
-.dim-chip { display: inline-block; background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 700; color: #3730a3; white-space: nowrap; }
+.dim-chip { display: inline-block; background: #f0f0f0; border: 1px solid #ccc; border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 700; color: #333; white-space: nowrap; }
 
-.export-btn { padding: 6px 14px; background: white; color: #4361ee; border: 1px solid #4361ee; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
-.export-btn:hover { background: #eef0ff; }
+.export-btn { padding: 6px 14px; background: white; color: #333; border: 1px solid #999; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.export-btn:hover { background: #f5f5f5; }
 </style>
 </head>
 <body>
@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.17.0</span>
+    <span class="version-badge">v2.18.0</span>
   </div>
 
   <div class="main">
@@ -245,10 +245,10 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
         <div class="canvas-legend" id="cvLegend">
           <!-- 기본 범례 -->
           <span id="lgDefault">
-            <span>■ <span style="background:#e0d8c0;padding:0 4px;border-radius:2px;font-size:10px">상/지판</span></span>
-            <span>■ <span style="background:#c8cad8;padding:0 4px;border-radius:2px;font-size:10px">측판</span></span>
+            <span>■ <span style="background:#e2e2e2;padding:0 4px;border-radius:2px;font-size:10px">상/지판</span></span>
+            <span>■ <span style="background:#d0d0d0;padding:0 4px;border-radius:2px;font-size:10px">측판</span></span>
             <span>■ <span style="background:#d5d5d5;padding:0 4px;border-radius:2px;font-size:10px">고정선반</span></span>
-            <span>■ <span style="background:#bde0f8;padding:0 4px;border-radius:2px;font-size:10px;color:#0369a1">이동선반</span></span>
+            <span>■ <span style="background:#c8c8c8;padding:0 4px;border-radius:2px;font-size:10px;color:#333">이동선반</span></span>
           </span>
           <!-- 부속구분 범례 (숨김) -->
           <span id="lgColor" style="display:none">
@@ -265,13 +265,13 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
           </label>
         </div>
         <!-- 부속 편집 바: 캔버스 위 플로팅 -->
-        <div id="partEditBar" style="display:none;position:absolute;bottom:38px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(248,249,255,0.97);border:1.5px solid #c7d2fe;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;font-size:11px;box-shadow:0 3px 14px rgba(67,97,238,.18);white-space:nowrap;pointer-events:auto;">
-          <span id="partEditLabel" style="color:#4361ee;font-weight:700;font-size:11px;padding-right:4px;border-right:1px solid #ddd;margin-right:2px"></span>
+        <div id="partEditBar" style="display:none;position:absolute;bottom:38px;left:50%;transform:translateX(-50%);z-index:30;background:rgba(255,255,255,0.97);border:1.5px solid #ccc;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;font-size:11px;box-shadow:0 3px 14px rgba(0,0,0,.14);white-space:nowrap;pointer-events:auto;">
+          <span id="partEditLabel" style="color:#111;font-weight:700;font-size:11px;padding-right:4px;border-right:1px solid #ddd;margin-right:2px"></span>
           <!-- 위치 섹션 (선반만) -->
           <div id="posEditSection" style="display:none;align-items:center;gap:3px;padding-right:6px;border-right:1px solid #ddd;margin-right:2px">
             <span style="color:#888;font-size:10px">↕</span>
             <input id="shelfPosInput" type="number" min="0" step="1"
-              style="width:52px;padding:2px 5px;border:1.5px solid #4361ee;border-radius:10px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;background:white;"
+              style="width:52px;padding:2px 5px;border:1.5px solid #888;border-radius:10px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;background:white;"
               oninput="applyShelfPosInput(this.value)" onchange="applyShelfPosInput(this.value)">
             <span style="color:#888;font-size:10px">mm</span>
             <button onclick="nudgeShelf(-10)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">−10</button>
@@ -281,9 +281,9 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
             <span id="shelfPosRange" style="color:#bbb;font-size:10px;margin-left:1px"></span>
           </div>
           <!-- 깊이 단차 -->
-          <span style="color:#6366f1;font-size:10px;font-weight:600">단차</span>
+          <span style="color:#444;font-size:10px;font-weight:600">단차</span>
           <input id="depthOffsetInput" type="number" step="1"
-            style="width:48px;padding:2px 5px;border:1.5px solid #6366f1;border-radius:10px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;background:white;"
+            style="width:48px;padding:2px 5px;border:1.5px solid #888;border-radius:10px;font-size:12px;font-weight:700;text-align:center;font-family:inherit;-moz-appearance:textfield;background:white;"
             oninput="applyDepthOffset(this.value)" onchange="applyDepthOffset(this.value)">
           <span style="color:#888;font-size:10px">mm</span>
           <button onclick="nudgeDepthOffset(-5)" style="padding:1px 5px;border:1px solid #ddd;border-radius:8px;background:white;font-size:10px;cursor:pointer;font-family:inherit;color:#444">−5</button>
@@ -491,7 +491,7 @@ function dadoNoteStr(){
   const warnW = dadoW !== backT ? ` ⚠ 홈 너비(${dadoW})≠후판두께(${backT})` : '';
   const warnS = shelfD <= 0   ? ` ⚠ 배면여백+홈폭이 D를 초과!` : '';
   return `후판 재단: <b>${bW} × ${bH}mm</b>  <span style="color:#888;font-weight:400">(${bW_base}×${bH_base} − 조립여유2mm)</span><br>` +
-    `<b>선반·칸막이·서랍 유효 깊이: D(${D}) − ${dadoPos} − ${dadoW} = <span style="color:#e03">${shelfD}mm</span></b>` +
+    `<b>선반·칸막이·서랍 유효 깊이: D(${D}) − ${dadoPos} − ${dadoW} = <span style="color:#555">${shelfD}mm</span></b>` +
     `${warn}${warnW}${warnS}`;
 }
 function svgDadoDiagram(){
@@ -508,7 +508,7 @@ function svgDadoDiagram(){
   const gx2=px0+(dadoPos+dadoW)*scX;
   const gdepth=Math.max(dadoD*scY, 16);
   const gy1=py0+ph-gdepth, gy2=py0+ph;
-  const R='#e03333';
+  const R='#555';
   const fa=`font-size="10" font-weight="700" font-family="'Malgun Gothic',sans-serif" fill="${R}"`;
   const ext=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${R}" stroke-width="1" stroke-dasharray="2.5,2" opacity="0.7"/>`;
   const arr=(x1,y1,x2,y2)=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${R}" stroke-width="1.5" marker-start="url(#da)" marker-end="url(#da)"/>`;
@@ -830,8 +830,8 @@ function renderColConfigs() {
           <div style="display:flex;flex-wrap:wrap;gap:4px">
             ${types.map((t,j)=>`
               <button onclick="toggleShelfType(${i},${j})"
-                style="padding:3px 8px;border-radius:12px;border:1.5px solid ${t==='adj'?'#0ea5e9':'#4361ee'};
-                       background:${t==='adj'?'#e0f2fe':'#eef0ff'};color:${t==='adj'?'#0369a1':'#4361ee'};
+                style="padding:3px 8px;border-radius:12px;border:1.5px solid ${t==='adj'?'#555':'#333'};
+                       background:${t==='adj'?'#eeeeee':'#f0f0f0'};color:${t==='adj'?'#444':'#333'};
                        font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
                        transition:all .12s"
                 title="클릭하면 ${t==='fixed'?'이동형':'고정형'}으로 변경">
@@ -1010,7 +1010,7 @@ function step5(el) {
     </div>
     <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
       <button class="btn-next" onclick="switchTab('parts')">자재 목록 확인 →</button>
-      <button class="btn-next" style="background:#2a9d8f" onclick="exportCSV()">CSV 내보내기</button>
+      <button class="btn-next" style="background:#333" onclick="exportCSV()">CSV 내보내기</button>
     </div>`;
 }
 
@@ -1238,7 +1238,7 @@ function renderParts() {
      후판: <b>${backWr} × ${backHr}</b> × T${backT}<br>
      칸 내부 폭 = (${W} − 2×${T}${vCols>1?` − ${vCols-1}×${T}`:''}) ÷ ${vCols}
      = <strong>${colInnerW}mm</strong>
-     ${isDadoR?`<br><span style="color:#4361ee">▪ 후판 홈 삽입: W${dW}×D${dD} @배면${dP}mm — 선반·칸막이·서랍 유효깊이 = ${D}-${dP}-${dW} = <b>${D-dP-dW}mm</b></span>`:''}
+     ${isDadoR?`<br><span style="color:#333">▪ 후판 홈 삽입: W${dW}×D${dD} @배면${dP}mm — 선반·칸막이·서랍 유효깊이 = ${D}-${dP}-${dW} = <b>${D-dP-dW}mm</b></span>`:''}
     `;
 
   const GCLS = {box:'',shelf:'g-shelf',door:'g-door',drawer:'g-drawer',div:'g-div'};
@@ -1345,8 +1345,8 @@ function draw() {
   function partState(type, sub) {
     const isSel = _sel   && _sel.type===type   && (_sel.side===sub  || sub==null);
     const isHov = _hover && _hover.type===type && (_hover.side===sub || sub==null);
-    if (isSel) return {fill:'#bfdbfe', stroke:'#4361ee'};
-    if (isHov) return {fill:'#dbeafe', stroke:'#3b62ee'};
+    if (isSel) return {fill:'#e0e0e0', stroke:'#000'};
+    if (isHov) return {fill:'#efefef', stroke:'#444'};
     return null;
   }
   function drawPanel(x, y, w, h, baseCol, type, sub) {
@@ -1361,18 +1361,18 @@ function draw() {
   }
 
   // ── 상판 ────────────────────────────────────────────
-  drawPanel(topX, topPanelY, topW_px, Tpx, '#e8dfc8', 'topPanel');
+  drawPanel(topX, topPanelY, topW_px, Tpx, '#e2e2e2', 'topPanel');
   if(topOffPx > 4)
     drawSpaceDims(ctx, topX, oy, topW_px, topOffPx, [], Tpx, sc);
 
   // ── 지판(하판) ──────────────────────────────────────
-  drawPanel(botX, botPanelY, botW_px, Tpx, '#e8dfc8', 'botPanel');
+  drawPanel(botX, botPanelY, botW_px, Tpx, '#e2e2e2', 'botPanel');
   if(botOffPx > 4)
     drawSpaceDims(ctx, botX, oy+fh-botOffPx, botW_px, botOffPx, [], Tpx, sc);
 
   // ── 측판 좌/우 ──────────────────────────────────────
-  drawPanel(ox,        sideY1, Tpx, sideHpx, '#d0d4e0', 'sidePanel', 'left');
-  drawPanel(ox+fw-Tpx, sideY1, Tpx, sideHpx, '#d0d4e0', 'sidePanel', 'right');
+  drawPanel(ox,        sideY1, Tpx, sideHpx, '#d0d0d0', 'sidePanel', 'left');
+  drawPanel(ox+fw-Tpx, sideY1, Tpx, sideHpx, '#d0d0d0', 'sidePanel', 'right');
 
   // ── 수직 칸막이 (vDivPos 기반 위치, 고정/이동형 구분) ──
   for(let i=0;i<S.vCols-1;i++){
@@ -1381,17 +1381,17 @@ function draw() {
     const isHovDiv=_hover&&_hover.type==='vdiv'&&_hover.idx===i;
     const isDivAdj=(S.vDivTypes||[])[i]==='adj';
     const pcDiv = _partColor ? (isDivAdj?PART_COLORS.vdivAdj:PART_COLORS.vdiv) : null;
-    const baseDiv = isDivAdj ? '#bde0f8' : '#d4d4d0';
-    ctx.fillStyle = isSelDiv?'#bfdbfe': isHovDiv?'#dbeafe': (pcDiv?pcDiv.fill:baseDiv);
+    const baseDiv = isDivAdj ? '#c8c8c8' : '#d0d0d0';
+    ctx.fillStyle = isSelDiv?'#e0e0e0': isHovDiv?'#efefef': (pcDiv?pcDiv.fill:baseDiv);
     ctx.fillRect(dx, cy1, Tpx, iH);
-    ctx.strokeStyle=isSelDiv?'#4361ee':isHovDiv?'#3b62ee':(pcDiv?pcDiv.stroke:(isDivAdj?'#0ea5e9':'#555'));
+    ctx.strokeStyle=isSelDiv?'#000':isHovDiv?'#444':(pcDiv?pcDiv.stroke:(isDivAdj?'#888':'#555'));
     ctx.lineWidth=0.8;
     ctx.strokeRect(dx, cy1, Tpx, iH);
     // 이동형 칸막이: 핀홀 점 표시
     if(isDivAdj&&Tpx>4){
       const dotR=Math.max(1,Math.min(2.5,Tpx*0.18));
       const spacing=Math.max(16,28*sc);
-      ctx.fillStyle=isSelDiv?'#4361ee':isHovDiv?'#3b62ee':'#0ea5e9';
+      ctx.fillStyle=isSelDiv?'#000':isHovDiv?'#444':'#888';
       for(let dy=cy1+spacing;dy<cy2-spacing/2;dy+=spacing){
         ctx.beginPath();ctx.arc(dx+Tpx/2,dy,dotR,0,Math.PI*2);ctx.fill();
       }
@@ -1414,7 +1414,7 @@ function draw() {
       drawDrawers(ctx,cx1,cy1,iW,iH,Math.max(1,c.drawers||2),sc);
     } else if(c.type==='mixed'){
       const splitY=cy1+iH*0.55;
-      ctx.fillStyle=_partColor?PART_COLORS.shelf.fill:'#d4d4d0';
+      ctx.fillStyle=_partColor?PART_COLORS.shelf.fill:'#d0d0d0';
       ctx.fillRect(cx1,splitY,iW,Tpx);
       ctx.strokeStyle=_partColor?PART_COLORS.shelf.stroke:'#555'; ctx.lineWidth=0.8;
       ctx.strokeRect(cx1,splitY,iW,Tpx);
@@ -1451,8 +1451,8 @@ function draw() {
     // 정면도에서: 판재 두께(Tpx) 안에 홈 깊이(dDpx)를 표시
 
     ctx.save();
-    ctx.fillStyle='rgba(67,97,238,0.18)';
-    ctx.strokeStyle='#4361ee';
+    ctx.fillStyle='rgba(0,0,0,0.08)';
+    ctx.strokeStyle='#555';
     ctx.lineWidth=0.8;
     ctx.setLineDash([3,2]);
 
@@ -1474,7 +1474,7 @@ function draw() {
 
     // 홈 치수 레이블 (좌 측판 기준)
     const fntSm=`${Math.max(7,Math.round(sc*7))}px 'Malgun Gothic',sans-serif`;
-    ctx.font=fntSm; ctx.fillStyle='#4361ee'; ctx.textAlign='left';
+    ctx.font=fntSm; ctx.fillStyle='#555'; ctx.textAlign='left';
     ctx.save();
     ctx.translate(ox+Tpx-dDpx/2, sideY1+6);
     ctx.rotate(-Math.PI/2);
@@ -1516,8 +1516,8 @@ function draw() {
   }
 
   // ── 외부 치수선 ─────────────────────────────────────
-  dimH(ctx,ox,oy+fh+28,fw,`${S.w}mm`,'#4361ee');
-  dimV(ctx,ox+fw+28,oy,fh,`${S.h}mm`,'#4361ee');
+  dimH(ctx,ox,oy+fh+28,fw,`${S.w}mm`,'#333');
+  dimV(ctx,ox+fw+28,oy,fh,`${S.h}mm`,'#333');
   ctx.fillStyle='#999';ctx.font=`${Math.max(9,Math.round(sc*9))}px 'Malgun Gothic',sans-serif`;ctx.textAlign='right';
   ctx.fillText(`D: ${S.d}mm  T: ${S.T}mm`,canvas.width-4,14);
 
@@ -1544,7 +1544,7 @@ function draw() {
         const ax=scx2-12;
         const fromBotMm=Math.round(dimLen/sc);
         const fntSz2=Math.max(9,Math.round(sc*10));
-        const R='#e03333';
+        const R='#555';
         ctx.save();
         // 치수선
         ctx.strokeStyle=R;ctx.fillStyle=R;ctx.lineWidth=1.5;
@@ -1600,7 +1600,7 @@ function draw() {
     const isTop=corner.startsWith('top'), isLeft=corner.endsWith('Left');
     const dx=isLeft?ox:ox+fw, dy=isTop?oy:oy+fh;
     ctx.save(); ctx.globalAlpha=a;
-    ctx.fillStyle='#4361ee';
+    ctx.fillStyle='#000';
     ctx.beginPath(); ctx.arc(dx,dy,4,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
@@ -1673,7 +1673,7 @@ function drawPartSizeLabels(ctx,p){
   // 선반: 단차 있는 것만 표기
   ctx.save();
   ctx.font=`bold ${Math.max(7,fs-2)}px 'Malgun Gothic',sans-serif`;
-  ctx.fillStyle='rgba(99,102,241,0.88)'; ctx.textAlign='right';
+  ctx.fillStyle='rgba(80,80,80,0.88)'; ctx.textAlign='right';
   for(let ci=0;ci<S.vCols;ci++){
     const c=S.cols[ci];
     if(!c.shelfPos||!c.shelfPos.length) continue;
@@ -1701,23 +1701,23 @@ function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfTypes,ci){
     const isHov=_hover&&_hover.type==='shelf'&&_hover.ci===ci&&_hover.idx===i;
     // 배경색
     const pcS = _partColor ? (isAdj?PART_COLORS.shelfAdj:PART_COLORS.shelf) : null;
-    const baseCol = isAdj ? '#bde0f8' : '#d5d5d5';
-    ctx.fillStyle = isSel?'#bfdbfe': isHov?'#dbeafe': (pcS?pcS.fill:baseCol);
+    const baseCol = isAdj ? '#c8c8c8' : '#d5d5d5';
+    ctx.fillStyle = isSel?'#e0e0e0': isHov?'#efefef': (pcS?pcS.fill:baseCol);
     ctx.fillRect(x+1,sy,w-2,Tpx);
-    ctx.strokeStyle=isSel?'#4361ee':isHov?'#3b62ee':(pcS?pcS.stroke:(isAdj?'#0ea5e9':'#555'));
+    ctx.strokeStyle=isSel?'#000':isHov?'#444':(pcS?pcS.stroke:(isAdj?'#888':'#555'));
     ctx.lineWidth=0.8;
     ctx.strokeRect(x+1,sy,w-2,Tpx);
     // 이동형: 선반핀 홀 점 표시
     if(isAdj&&Tpx>4){
       const dotR=Math.max(1,Math.min(2.5,Tpx*0.18));
       const spacing=Math.max(16,28*sc);
-      ctx.fillStyle=isSel?'#4361ee':isHov?'#3b62ee':'#0ea5e9';
+      ctx.fillStyle=isSel?'#000':isHov?'#444':'#888';
       for(let dx=x+spacing;dx<x+w-spacing/2;dx+=spacing){
         ctx.beginPath();ctx.arc(dx,sy+Tpx/2,dotR,0,Math.PI*2);ctx.fill();
       }
     }
     if(Tpx>10&&sc){
-      ctx.fillStyle=isSel?'#4361ee':isHov?'#3b62ee':isAdj?'#0ea5e9':'#888';
+      ctx.fillStyle=isSel?'#000':isHov?'#444':isAdj?'#888':'#888';
       ctx.font=`${Math.max(7,Math.round(sc*7.5))}px 'Malgun Gothic',sans-serif`;
       ctx.textAlign='right';
       ctx.fillText(`T${S.T}`,x-2,sy+Tpx/2+3);
@@ -1745,16 +1745,16 @@ function drawSpaceDims(ctx,x,y,w,h,positions,Tpx,sc){
     ctx.font=`bold ${fntSz}px 'Malgun Gothic',sans-serif`;
     const tw=ctx.measureText(`${spMm}`).width;
     // 반투명 배경
-    ctx.fillStyle='rgba(240,246,255,0.82)';
+    ctx.fillStyle='rgba(0,0,0,0.04)';
     ctx.beginPath();
     const bx=midX-tw/2-4, by=midY-fntSz+1, bw=tw+8, bh=fntSz+4;
     ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.fillRect(bx,by,bw,bh);
     ctx.fill();
-    ctx.strokeStyle='#c7d2fe'; ctx.lineWidth=0.8;
+    ctx.strokeStyle='#ccc'; ctx.lineWidth=0.8;
     ctx.beginPath();
     ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.strokeRect(bx,by,bw,bh);
     ctx.stroke();
-    ctx.fillStyle='#3a5a9a';
+    ctx.fillStyle='#444';
     ctx.fillText(`${spMm}`,midX,midY+fntSz/3);
   }
 }
@@ -1771,16 +1771,16 @@ function drawDrawers(ctx,x,y,w,h,n,sc){
       ctx.font=`bold ${fntSz}px 'Malgun Gothic',sans-serif`;
       ctx.textAlign='center';
       const tw=ctx.measureText(`${dhMm}`).width;
-      ctx.fillStyle='rgba(240,246,255,0.82)';
+      ctx.fillStyle='rgba(0,0,0,0.04)';
       const bx=midX-tw/2-4,by=midY-fntSz+1,bw=tw+8,bh=fntSz+4;
       ctx.beginPath();
       ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.fillRect(bx,by,bw,bh);
       ctx.fill();
-      ctx.strokeStyle='#c7d2fe';ctx.lineWidth=0.8;
+      ctx.strokeStyle='#ccc';ctx.lineWidth=0.8;
       ctx.beginPath();
       ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.strokeRect(bx,by,bw,bh);
       ctx.stroke();
-      ctx.fillStyle='#3a5a9a';
+      ctx.fillStyle='#444';
       ctx.fillText(`${dhMm}`,midX,midY+fntSz/3);
     }
   }
@@ -1968,8 +1968,8 @@ function nudgeShelf(deltaMm){
 // ── 코너 줌 팝업 (HTML/SVG, 도면 외부 표시) ────────────
 function cornerZoomSVG(isTop, isLeft, joint, pName) {
   const W=144, H=96, TZ=26;
-  const hF='#fef3c7', hS='#b45309';
-  const sF='#dbeafe', sS='#1d4ed8';
+  const hF='#e8e8e8', hS='#333';
+  const sF='#d0d0d0', sS='#555';
   const REST=H-TZ, RESTW=W-TZ;
   let r=[], labels=[];
 
@@ -2033,14 +2033,14 @@ function showCornerPopups(corners) {
     el.style.cssText = `
       position:fixed;left:${popX}px;top:${popY}px;width:${BOX_W}px;
       opacity:${a};transition:opacity 0.05s;
-      background:rgba(248,249,255,0.98);border:1.5px solid #4361ee;
+      background:rgba(255,255,255,0.98);border:1.5px solid #333;
       border-radius:10px;overflow:hidden;
-      box-shadow:0 6px 22px rgba(67,97,238,0.28);
+      box-shadow:0 6px 22px rgba(0,0,0,0.18);
       font-family:'Malgun Gothic',sans-serif;
     `;
     el.innerHTML = `
-      <div style="background:rgba(67,97,238,0.09);padding:5px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(67,97,238,0.15)">
-        <span style="font-size:11px;font-weight:700;color:#4361ee">🔍 ${pName} ${jName}</span>
+      <div style="background:rgba(0,0,0,0.05);padding:5px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,0.10)">
+        <span style="font-size:11px;font-weight:700;color:#111">▶ ${pName} ${jName}</span>
         <span style="font-size:10px;color:#999">T${S.T}</span>
       </div>
       <div style="padding:8px">${cornerZoomSVG(isTop,isLeft,joint,pName)}</div>
