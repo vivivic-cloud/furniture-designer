@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f4ff; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.15.0</span>
+    <span class="version-badge">v2.16.0</span>
   </div>
 
   <div class="main">
@@ -415,7 +415,10 @@ let _cs = {};      // canvas 좌표 상태 (draw()에서 설정)
 let _sel   = null; // 선택된 요소
 let _hover = null; // 호버 요소
 let _drag  = null; // 드래그 상태
-let _partColor = false; // 부속 구분 색상 모드
+let _partColor = false;   // 부속 구분 색상 모드
+let _cornerAnim = null;   // {which:'top'|'bottom', startTime, duration}
+let _cornerHover = null;  // 'topLeft'|'topRight'|'botLeft'|'botRight'
+let _animRAF = null;      // requestAnimationFrame handle
 
 // 부속별 색상 팔레트 (부속구분 모드용)
 const PART_COLORS = {
@@ -441,6 +444,16 @@ function switchTab(t) {
 // ── Navigation ───────────────────────────────────────
 function next() { if (S.step===0&&!S.type) return; if (S.step<TOTAL-1){S.step++;render();} }
 function prev() { if (S.step>0){S.step--;render();} }
+
+// ── 코너 애니메이션 트리거 ─────────────────────────────
+function triggerCornerAnim(which) {
+  _cornerAnim = { which, startTime: Date.now(), duration: 2600 };
+  scheduleAnim();
+}
+function scheduleAnim() {
+  if (!_animRAF)
+    _animRAF = requestAnimationFrame(() => { _animRAF = null; draw(); });
+}
 
 // ── 부속 구분 색상 토글 ────────────────────────────────
 function togglePartColor(on) {
@@ -937,6 +950,7 @@ function setJoint(pos, val) {
   });
   const jsEl = document.getElementById('jointSummaryEl');
   if(jsEl) jsEl.innerHTML = jointSummary();
+  triggerCornerAnim(pos);  // ← 코너 확대 애니메이션 시작
   draw();
   if(document.getElementById('paneParts').classList.contains('active')) renderParts();
 }
@@ -1555,6 +1569,38 @@ function draw() {
       }
     }
   }
+  // ── 코너 확대 줌 박스 ───────────────────────────────
+  const cw = canvas.width, ch = canvas.height;
+  const cornersToShow = []; // {corner, alpha}
+
+  // 애니메이션 상태 처리
+  if(_cornerAnim) {
+    const elapsed = Date.now() - _cornerAnim.startTime;
+    const dur = _cornerAnim.duration;
+    if(elapsed >= dur) {
+      _cornerAnim = null;
+    } else {
+      const FADE_IN=300, FADE_OUT=450;
+      let a = elapsed < FADE_IN ? elapsed/FADE_IN
+            : elapsed > dur-FADE_OUT ? (dur-elapsed)/FADE_OUT
+            : 1;
+      const which = _cornerAnim.which;
+      if(which==='top')    { cornersToShow.push({corner:'topLeft',a}); cornersToShow.push({corner:'topRight',a}); }
+      else                 { cornersToShow.push({corner:'botLeft',a}); cornersToShow.push({corner:'botRight',a}); }
+      scheduleAnim(); // 계속 프레임 요청
+    }
+  }
+
+  // 호버 코너 처리 (alpha=1 고정)
+  if(_cornerHover) {
+    const existing = cornersToShow.find(c=>c.corner===_cornerHover);
+    if(existing) existing.a = 1;
+    else cornersToShow.push({corner:_cornerHover, a:1});
+  }
+
+  for(const {corner,a} of cornersToShow)
+    drawCornerZoom(ctx, corner, a, ox, oy, fw, fh, Tpx, cw, ch);
+
   syncShelfPosBar();
 }
 
@@ -1912,9 +1958,138 @@ function nudgeShelf(deltaMm){
   if(input) input.value=calcFromBottom(_sel.ci,_sel.idx);
 }
 
+// ── 코너 확대 줌 박스 ─────────────────────────────────
+function drawCornerZoom(ctx, corner, alpha, ox, oy, fw, fh, Tpx, cw, ch) {
+  const isTop  = corner.startsWith('top');
+  const isLeft = corner.endsWith('Left');
+  const joint  = isTop ? S.topJoint : S.bottomJoint;
+
+  const BOX_W = 152, BOX_H = 128;
+  const PAD2  = 8, HEADER = 20;
+  const TZ    = 30; // 줌 뷰 내 판재 두께(고정 px)
+
+  // 박스 위치: 해당 모서리 쪽에 바짝 붙임
+  const OFFS = 4;
+  let bx = isLeft ? ox + OFFS : ox + fw - BOX_W - OFFS;
+  let by = isTop  ? oy + OFFS : oy + fh - BOX_H - OFFS;
+  bx = Math.max(2, Math.min(bx, cw - BOX_W - 2));
+  by = Math.max(2, Math.min(by, ch - BOX_H - 2));
+
+  const DX = bx + PAD2;
+  const DY = by + HEADER + PAD2;
+  const DW = BOX_W - PAD2 * 2;
+  const DH = BOX_H - HEADER - PAD2 * 2;
+  const REST  = DH - TZ;   // side panel 잔여 높이
+  const RESTW = DW - TZ;   // side panel 잔여 폭
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // 모서리 연결선 + 도트
+  const dotX = isLeft ? ox : ox + fw;
+  const dotY = isTop  ? oy : oy + fh;
+  ctx.strokeStyle = 'rgba(67,97,238,0.28)';
+  ctx.lineWidth = 0.8; ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.moveTo(isLeft ? bx+BOX_W : bx, isTop ? by+BOX_H : by);
+  ctx.lineTo(dotX, dotY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#4361ee';
+  ctx.beginPath(); ctx.arc(dotX,dotY,3,0,Math.PI*2); ctx.fill();
+
+  // 박스 그림자 + 배경
+  ctx.shadowColor='rgba(67,97,238,0.22)'; ctx.shadowBlur=10;
+  ctx.fillStyle='rgba(248,249,255,0.98)';
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(bx,by,BOX_W,BOX_H,8);
+  else ctx.rect(bx,by,BOX_W,BOX_H);
+  ctx.fill(); ctx.shadowBlur=0;
+  ctx.strokeStyle='#4361ee'; ctx.lineWidth=1;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(bx,by,BOX_W,BOX_H,8);
+  else ctx.rect(bx,by,BOX_W,BOX_H);
+  ctx.stroke();
+
+  // 헤더 배경
+  ctx.fillStyle='rgba(67,97,238,0.08)';
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(bx+1,by+1,BOX_W-2,HEADER-1,[8,8,0,0]);
+  else ctx.rect(bx+1,by+1,BOX_W-2,HEADER-1);
+  ctx.fill();
+
+  // 헤더 텍스트
+  const jName = joint==='over'?'올라탐형':joint==='under'?'아래형':'끼움형';
+  const pName = isTop ? '상판' : '지판';
+  ctx.fillStyle='#4361ee'; ctx.font=`bold 10px 'Malgun Gothic',sans-serif`;
+  ctx.textAlign='left'; ctx.fillText(`🔍 ${pName} ${jName}`, bx+8, by+13);
+  ctx.fillStyle='#999'; ctx.font=`9px 'Malgun Gothic',sans-serif`;
+  ctx.textAlign='right'; ctx.fillText(`T${S.T}`, bx+BOX_W-6, by+13);
+
+  // 판재 그리기 헬퍼
+  const hF='#fef3c7', hS='#b45309'; // 상/지판 황색
+  const sF='#dbeafe', sS='#1d4ed8'; // 측판 청색
+  function panel(x,y,w,h,fill,stroke){
+    ctx.fillStyle=fill; ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=stroke; ctx.lineWidth=0.8; ctx.strokeRect(x,y,w,h);
+  }
+  function lbl(x,y,txt,col){
+    ctx.fillStyle=col; ctx.font=`bold 9px 'Malgun Gothic',sans-serif`;
+    ctx.textAlign='center'; ctx.fillText(txt,x,y);
+  }
+
+  if(isTop) {
+    if(joint==='over') {
+      // 상판 올라탐: 상판이 전체 폭으로 위에
+      panel(DX, DY, DW, TZ, hF, hS);
+      lbl(DX+DW/2, DY+TZ/2+3, pName, hS);
+      if(isLeft){ panel(DX, DY+TZ, TZ, REST, sF, sS); lbl(DX+TZ/2, DY+TZ+REST/2+3,'측판',sS); }
+      else       { panel(DX+RESTW, DY+TZ, TZ, REST, sF, sS); lbl(DX+RESTW+TZ/2, DY+TZ+REST/2+3,'측판',sS); }
+    } else {
+      // 끼움형: 측판 전체 높이, 상판이 사이에
+      if(isLeft){
+        panel(DX, DY, TZ, DH, sF, sS); lbl(DX+TZ/2, DY+DH/2+3,'측판',sS);
+        panel(DX+TZ, DY, RESTW, TZ, hF, hS); lbl(DX+TZ+RESTW/2, DY+TZ/2+3, pName, hS);
+      } else {
+        panel(DX+RESTW, DY, TZ, DH, sF, sS); lbl(DX+RESTW+TZ/2, DY+DH/2+3,'측판',sS);
+        panel(DX, DY, RESTW, TZ, hF, hS); lbl(DX+RESTW/2, DY+TZ/2+3, pName, hS);
+      }
+    }
+  } else {
+    if(joint==='under') {
+      // 지판 아래형: 지판이 전체 폭으로 아래에
+      panel(DX, DY+REST, DW, TZ, hF, hS);
+      lbl(DX+DW/2, DY+REST+TZ/2+3, pName, hS);
+      if(isLeft){ panel(DX, DY, TZ, REST, sF, sS); lbl(DX+TZ/2, DY+REST/2+3,'측판',sS); }
+      else       { panel(DX+RESTW, DY, TZ, REST, sF, sS); lbl(DX+RESTW+TZ/2, DY+REST/2+3,'측판',sS); }
+    } else {
+      // 끼움형: 측판 전체 높이, 지판이 사이에
+      if(isLeft){
+        panel(DX, DY, TZ, DH, sF, sS); lbl(DX+TZ/2, DY+DH/2+3,'측판',sS);
+        panel(DX+TZ, DY+REST, RESTW, TZ, hF, hS); lbl(DX+TZ+RESTW/2, DY+REST+TZ/2+3, pName, hS);
+      } else {
+        panel(DX+RESTW, DY, TZ, DH, sF, sS); lbl(DX+RESTW+TZ/2, DY+DH/2+3,'측판',sS);
+        panel(DX, DY+REST, RESTW, TZ, hF, hS); lbl(DX+RESTW/2, DY+REST+TZ/2+3, pName, hS);
+      }
+    }
+  }
+
+  ctx.restore();
+}
+
 // ── Canvas 마우스 인터랙션 ────────────────────────────
 (function(){
   const cv=document.getElementById('cv');
+
+  function cornerHitTest(mx,my){
+    if(!_cs.ox && _cs.ox!==0) return null;
+    const {ox,oy,fw,fh,Tpx}=_cs;
+    const R=Math.max(22, Tpx*2.8);
+    if(mx>ox-R&&mx<ox+R&&my>oy-R&&my<oy+R)         return 'topLeft';
+    if(mx>ox+fw-R&&mx<ox+fw+R&&my>oy-R&&my<oy+R)   return 'topRight';
+    if(mx>ox-R&&mx<ox+R&&my>oy+fh-R&&my<oy+fh+R)   return 'botLeft';
+    if(mx>ox+fw-R&&mx<ox+fw+R&&my>oy+fh-R&&my<oy+fh+R) return 'botRight';
+    return null;
+  }
 
   function hitTest(mx,my){
     if(!_cs.sc) return null;
@@ -1999,11 +2174,16 @@ function nudgeShelf(deltaMm){
     const h=hitTest(mx,my);
     cv.style.cursor=cursorFor(h);
 
+    // 코너 호버 감지
+    const prevCorner = _cornerHover;
+    _cornerHover = cornerHitTest(mx,my);
+    const cornerChanged = prevCorner !== _cornerHover;
+
     // 호버 상태 변경 시에만 재드로우
     const prevKey=_hover?JSON.stringify(_hover):null;
     _hover = h;
     const newKey=_hover?JSON.stringify(_hover):null;
-    if(prevKey!==newKey && !_drag) draw();
+    if((prevKey!==newKey || cornerChanged) && !_drag) draw();
 
     if(!_drag) return;
     const{Tpx,innerWpx}=_cs;
@@ -2038,7 +2218,9 @@ function nudgeShelf(deltaMm){
 
   cv.addEventListener('mouseleave',()=>{
     _drag=null;
-    if(_hover){_hover=null;draw();}
+    const hadChange = _hover || _cornerHover;
+    _hover=null; _cornerHover=null;
+    if(hadChange) draw();
   });
   cv.addEventListener('mouseup',()=>{ _drag=null; });
 })();
