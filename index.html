@@ -217,7 +217,7 @@ table.parts .g-total  td { background: #f0f0f0; font-weight: 700; border-top: 2p
     </svg>
     <h1>가구 외형 설계</h1>
     <span>설문으로 가구 외형 및 자재 목록을 생성합니다</span>
-    <span class="version-badge">v2.18.1</span>
+    <span class="version-badge">v2.19.0</span>
   </div>
 
   <div class="main">
@@ -572,7 +572,9 @@ function ensureCols() {
   for(let ci=0;ci<S.vCols;ci++){
     const c=S.cols[ci];
     const n=(c.type==='shelf'||c.type==='mixed')?(c.shelves||0):0;
-    if(!c.shelfPos||c.shelfPos.length!==n)
+    if(c.equalDiv && n>0)
+      c.shelfPos=Array.from({length:n},(_,i)=>(i+1)/(n+1)); // 등간격 강제
+    else if(!c.shelfPos||c.shelfPos.length!==n)
       c.shelfPos=Array.from({length:n},(_,i)=>(i+1)/(n+1));
   }
   // 수직 칸막이 위치·타입 초기화
@@ -613,8 +615,8 @@ function setColShelves(i,v){
   const prevT=S.cols[i].shelfTypes||[];
   const prevD=S.cols[i].shelfDepthOffsets||[];
   S.cols[i].shelves=n;
+  // equalDiv이면 항상 등간격, 아니면 등간격 초기값
   S.cols[i].shelfPos=Array.from({length:n},(_,j)=>(j+1)/(n+1));
-  // 기존 타입·오프셋 유지, 새 선반은 기본값
   S.cols[i].shelfTypes=Array.from({length:n},(_,j)=>prevT[j]||'fixed');
   S.cols[i].shelfDepthOffsets=Array.from({length:n},(_,j)=>prevD[j]||0);
   renderColConfigs(); draw();
@@ -625,6 +627,16 @@ function toggleShelfType(ci,si){
   if(!c.shelfTypes||si>=c.shelfTypes.length) return;
   c.shelfTypes[si]=c.shelfTypes[si]==='fixed'?'adj':'fixed';
   renderColConfigs(); draw();
+}
+function toggleEqualDiv(ci){
+  const c=S.cols[ci];
+  c.equalDiv=!c.equalDiv;
+  if(c.equalDiv){
+    const n=c.shelves||0;
+    c.shelfPos=Array.from({length:n},(_,j)=>(j+1)/(n+1));
+  }
+  renderColConfigs(); draw();
+  if(document.getElementById('paneParts').classList.contains('active'))renderParts();
 }
 function setColDrawers(i,v){S.cols[i].drawers=parseInt(v)||1; draw(); if(document.getElementById('paneParts').classList.contains('active'))renderParts();}
 
@@ -820,6 +832,14 @@ function renderColConfigs() {
       </div>`:''}
       ${hs&&types.length>0?`
         <div style="margin-top:8px">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+            <span class="fxadj-lbl">간격:</span>
+            <button class="fxadj-btn ${c.equalDiv?'sel':''}" style="font-size:10px;padding:2px 9px;display:flex;align-items:center;gap:4px"
+              onclick="toggleEqualDiv(${i})">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><line x1="1" y1="3" x2="11" y2="3"/><line x1="1" y1="6" x2="11" y2="6"/><line x1="1" y1="9" x2="11" y2="9"/></svg>
+              등간격 분할
+            </button>
+          </div>
           <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
             <span class="fxadj-lbl">선반 형태:</span>
             <button class="fxadj-btn ${allFixed?'sel':''}" style="font-size:10px;padding:2px 7px"
@@ -1409,7 +1429,7 @@ function draw() {
     if(c.type==='shelf'||c.type==='open'){
       const positions=c.type==='open'?[]:(c.shelfPos||[]);
       drawShelves(ctx,cx1,cy1,iW,iH,positions,Tpx,sc,selShelfIdx,shelfTypes,ci);
-      drawSpaceDims(ctx,cx1,cy1,iW,iH,positions,Tpx,sc);
+      drawSpaceDims(ctx,cx1,cy1,iW,iH,positions,Tpx,sc,c.equalDiv);
     } else if(c.type==='drawer'){
       drawDrawers(ctx,cx1,cy1,iW,iH,Math.max(1,c.drawers||2),sc);
     } else if(c.type==='mixed'){
@@ -1421,7 +1441,7 @@ function draw() {
       const topH=splitY-cy1;
       const positions=c.shelfPos||[];
       drawShelves(ctx,cx1,cy1,iW,topH,positions,Tpx,sc,selShelfIdx,shelfTypes,ci);
-      drawSpaceDims(ctx,cx1,cy1,iW,topH,positions,Tpx,sc);
+      drawSpaceDims(ctx,cx1,cy1,iW,topH,positions,Tpx,sc,c.equalDiv);
       drawDrawers(ctx,cx1,splitY+Tpx,iW,cy2-(splitY+Tpx),Math.max(1,c.drawers||2),sc);
     }
   }
@@ -1725,7 +1745,7 @@ function drawShelves(ctx,x,y,w,h,positions,Tpx,sc,selIdx,shelfTypes,ci){
   }
 }
 // 각 공간(칸)의 높이(mm)를 캔버스에 표기
-function drawSpaceDims(ctx,x,y,w,h,positions,Tpx,sc){
+function drawSpaceDims(ctx,x,y,w,h,positions,Tpx,sc,equalDiv){
   const spaces=[];
   if(positions.length===0){
     spaces.push({t:y,b:y+h});
@@ -1737,25 +1757,30 @@ function drawSpaceDims(ctx,x,y,w,h,positions,Tpx,sc){
   }
   const fntSz=Math.max(9,Math.round(sc*10));
   ctx.textAlign='center';
-  for(const sp of spaces){
+  // 등간격이면 첫 공간 높이로 모두 동일 판정
+  const allEqual = equalDiv && spaces.length>1;
+  for(let si=0;si<spaces.length;si++){
+    const sp=spaces[si];
     const spH=sp.b-sp.t;
     if(spH<fntSz+6) continue;
     const spMm=Math.round(spH/sc);
     const midX=x+w/2, midY=(sp.t+sp.b)/2;
     ctx.font=`bold ${fntSz}px 'Malgun Gothic',sans-serif`;
-    const tw=ctx.measureText(`${spMm}`).width;
+    // 등간격 모드: "= 숫자" 형식
+    const label = allEqual ? `= ${spMm}` : `${spMm}`;
+    const tw=ctx.measureText(label).width;
     // 반투명 배경
-    ctx.fillStyle='rgba(0,0,0,0.04)';
+    const bx=midX-tw/2-4, by2=midY-fntSz+1, bw=tw+8, bh=fntSz+4;
+    ctx.fillStyle= allEqual ? 'rgba(0,0,0,0.07)' : 'rgba(0,0,0,0.04)';
     ctx.beginPath();
-    const bx=midX-tw/2-4, by=midY-fntSz+1, bw=tw+8, bh=fntSz+4;
-    ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.fillRect(bx,by,bw,bh);
+    ctx.roundRect?ctx.roundRect(bx,by2,bw,bh,3):ctx.fillRect(bx,by2,bw,bh);
     ctx.fill();
-    ctx.strokeStyle='#ccc'; ctx.lineWidth=0.8;
+    ctx.strokeStyle= allEqual ? '#888' : '#ccc'; ctx.lineWidth=0.8;
     ctx.beginPath();
-    ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.strokeRect(bx,by,bw,bh);
+    ctx.roundRect?ctx.roundRect(bx,by2,bw,bh,3):ctx.strokeRect(bx,by2,bw,bh);
     ctx.stroke();
-    ctx.fillStyle='#444';
-    ctx.fillText(`${spMm}`,midX,midY+fntSz/3);
+    ctx.fillStyle= allEqual ? '#000' : '#444';
+    ctx.fillText(label,midX,midY+fntSz/3);
   }
 }
 function drawDrawers(ctx,x,y,w,h,n,sc){
@@ -2108,7 +2133,8 @@ function showCornerPopups(corners) {
   function cursorFor(h){
     if(!h) return 'default';
     if(h.type==='vdiv') return 'ew-resize';
-    if(h.type==='shelf'||h.type==='topPanel'||h.type==='botPanel') return 'ns-resize';
+    if(h.type==='topPanel'||h.type==='botPanel') return 'ns-resize';
+    if(h.type==='shelf') return S.cols[h.ci]?.equalDiv ? 'default' : 'ns-resize';
     return 'pointer';
   }
 
@@ -2132,8 +2158,10 @@ function showCornerPopups(corners) {
         _drag={type:'vdiv',idx:h.idx,startX:mx,startPos:S.vDivPos[h.idx]};
       } else {
         _sel={type:'shelf',ci:h.ci,idx:h.idx};
-        _drag={type:'shelf',ci:h.ci,idx:h.idx,startY:my,
-               startPos:S.cols[h.ci].shelfPos[h.idx],h:h.h,y:h.y};
+        // 등간격 분할 모드이면 드래그 비활성
+        if(!S.cols[h.ci].equalDiv)
+          _drag={type:'shelf',ci:h.ci,idx:h.idx,startY:my,
+                 startPos:S.cols[h.ci].shelfPos[h.idx],h:h.h,y:h.y};
       }
     } else {
       _sel=null;
